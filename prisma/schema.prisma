@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alerta {
+  id_alerta             BigInt                 @id @default(autoincrement())
+  id_usuario            BigInt
+  id_tipo_alerta        Int                    @db.SmallInt
+  id_presupuesto        BigInt?
+  id_limite             BigInt?
+  id_meta               BigInt?
+  id_compra_impulsiva   BigInt?
+  mensaje               String                 @db.VarChar(300)
+  fecha_generacion      DateTime               @db.Timestamp(6)
+  fecha_lectura         DateTime?              @db.Timestamp(6)
+  compra_impulsiva      compra_impulsiva?      @relation(fields: [id_compra_impulsiva], references: [id_compra_impulsiva], onDelete: NoAction, onUpdate: NoAction)
+  presupuesto_categoria presupuesto_categoria? @relation(fields: [id_limite], references: [id_limite], onDelete: NoAction, onUpdate: NoAction)
+  meta_ahorro           meta_ahorro?           @relation(fields: [id_meta], references: [id_meta], onDelete: NoAction, onUpdate: NoAction)
+  presupuesto           presupuesto?           @relation(fields: [id_presupuesto], references: [id_presupuesto], onDelete: NoAction, onUpdate: NoAction)
+  tipo_alerta           tipo_alerta            @relation(fields: [id_tipo_alerta], references: [id_tipo_alerta], onDelete: NoAction, onUpdate: NoAction)
+  usuario               usuario                @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_compra_impulsiva], map: "idx_alerta_compra_impulsiva")
+  @@index([id_limite], map: "idx_alerta_limite")
+  @@index([id_meta], map: "idx_alerta_meta")
+  @@index([id_presupuesto], map: "idx_alerta_presupuesto")
+  @@index([id_usuario], map: "idx_alerta_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model aporte_meta {
+  id_aporte    BigInt      @id @default(autoincrement())
+  id_meta      BigInt
+  monto        Decimal     @db.Decimal(14, 2)
+  fecha_aporte DateTime    @db.Date
+  nota         String?     @db.VarChar(200)
+  meta_ahorro  meta_ahorro @relation(fields: [id_meta], references: [id_meta], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_meta], map: "idx_aporte_meta_meta")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categoria {
+  id_categoria          Int                     @id @default(autoincrement())
+  id_usuario            BigInt?
+  id_tipo_categoria     Int                     @db.SmallInt
+  nombre                String                  @db.VarChar(60)
+  activa                Boolean
+  tipo_categoria        tipo_categoria          @relation(fields: [id_tipo_categoria], references: [id_tipo_categoria], onDelete: NoAction, onUpdate: NoAction)
+  usuario               usuario?                @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  compra_impulsiva      compra_impulsiva[]
+  movimiento            movimiento[]
+  presupuesto_categoria presupuesto_categoria[]
+
+  @@index([id_tipo_categoria], map: "idx_categoria_tipo")
+  @@index([id_usuario], map: "idx_categoria_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model compra_impulsiva {
+  id_compra_impulsiva BigInt        @id @default(autoincrement())
+  id_usuario          BigInt
+  id_categoria        Int
+  id_estado_espera    Int           @db.SmallInt
+  articulo            String        @db.VarChar(120)
+  monto_estimado      Decimal       @db.Decimal(14, 2)
+  motivo              String?       @db.VarChar(200)
+  fecha_inicio_espera DateTime      @db.Timestamp(6)
+  fecha_fin_espera    DateTime      @db.Timestamp(6)
+  fecha_resolucion    DateTime?     @db.Timestamp(6)
+  id_movimiento       BigInt?       @unique
+  alerta              alerta[]
+  categoria           categoria     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  estado_espera       estado_espera @relation(fields: [id_estado_espera], references: [id_estado_espera], onDelete: NoAction, onUpdate: NoAction)
+  movimiento          movimiento?   @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: NoAction, onUpdate: NoAction)
+  usuario             usuario       @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_categoria], map: "idx_compra_impulsiva_categoria")
+  @@index([id_usuario], map: "idx_compra_impulsiva_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model emprendimiento {
+  id_emprendimiento BigInt        @id @default(autoincrement())
+  id_usuario        BigInt
+  nombre            String        @db.VarChar(100)
+  descripcion       String?       @db.VarChar(300)
+  activo            Boolean
+  fecha_creacion    DateTime      @db.Timestamp(6)
+  usuario           usuario       @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  movimiento        movimiento[]
+  presupuesto       presupuesto[]
+
+  @@index([id_usuario], map: "idx_emprendimiento_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model estado_espera {
+  id_estado_espera Int                @id @db.SmallInt
+  nombre           String             @unique @db.VarChar(30)
+  compra_impulsiva compra_impulsiva[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model estado_meta {
+  id_estado_meta Int           @id @db.SmallInt
+  nombre         String        @unique @db.VarChar(30)
+  meta_ahorro    meta_ahorro[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model meta_ahorro {
+  id_meta        BigInt        @id @default(autoincrement())
+  id_usuario     BigInt
+  id_estado_meta Int           @db.SmallInt
+  nombre         String        @db.VarChar(100)
+  descripcion    String?       @db.VarChar(300)
+  monto_objetivo Decimal       @db.Decimal(14, 2)
+  fecha_inicio   DateTime      @db.Date
+  fecha_limite   DateTime      @db.Date
+  fecha_creacion DateTime      @db.Timestamp(6)
+  alerta         alerta[]
+  aporte_meta    aporte_meta[]
+  estado_meta    estado_meta   @relation(fields: [id_estado_meta], references: [id_estado_meta], onDelete: NoAction, onUpdate: NoAction)
+  usuario        usuario       @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_usuario], map: "idx_meta_ahorro_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model metodo_pago {
+  id_metodo_pago Int          @id @db.SmallInt
+  nombre         String       @unique @db.VarChar(40)
+  movimiento     movimiento[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model moneda {
+  codigo_moneda String    @id @db.Char(3)
+  nombre        String    @unique @db.VarChar(50)
+  simbolo       String    @db.VarChar(5)
+  usuario       usuario[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model movimiento {
+  id_movimiento     BigInt            @id @default(autoincrement())
+  id_usuario        BigInt
+  id_emprendimiento BigInt?
+  id_categoria      Int
+  id_metodo_pago    Int               @db.SmallInt
+  monto             Decimal           @db.Decimal(14, 2)
+  fecha_movimiento  DateTime          @db.Date
+  descripcion       String?           @db.VarChar(200)
+  fecha_registro    DateTime          @db.Timestamp(6)
+  compra_impulsiva  compra_impulsiva?
+  categoria         categoria         @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  emprendimiento    emprendimiento?   @relation(fields: [id_emprendimiento], references: [id_emprendimiento], onDelete: NoAction, onUpdate: NoAction)
+  metodo_pago       metodo_pago       @relation(fields: [id_metodo_pago], references: [id_metodo_pago], onDelete: NoAction, onUpdate: NoAction)
+  usuario           usuario           @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_categoria], map: "idx_movimiento_categoria")
+  @@index([id_emprendimiento], map: "idx_movimiento_emprendimiento")
+  @@index([id_metodo_pago], map: "idx_movimiento_metodo_pago")
+  @@index([id_usuario], map: "idx_movimiento_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model perfil_usuario {
+  id_perfil   Int       @id @db.SmallInt
+  nombre      String    @unique @db.VarChar(40)
+  descripcion String?   @db.VarChar(200)
+  usuario     usuario[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model presupuesto {
+  id_presupuesto        BigInt                  @id @default(autoincrement())
+  id_usuario            BigInt
+  id_emprendimiento     BigInt?
+  anio                  Int                     @db.SmallInt
+  mes                   Int                     @db.SmallInt
+  monto_total           Decimal                 @db.Decimal(14, 2)
+  umbral_alerta_pct     Int                     @db.SmallInt
+  fecha_creacion        DateTime                @db.Timestamp(6)
+  alerta                alerta[]
+  emprendimiento        emprendimiento?         @relation(fields: [id_emprendimiento], references: [id_emprendimiento], onDelete: NoAction, onUpdate: NoAction)
+  usuario               usuario                 @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  presupuesto_categoria presupuesto_categoria[]
+
+  @@index([id_emprendimiento], map: "idx_presupuesto_emprendimiento")
+  @@index([id_usuario], map: "idx_presupuesto_usuario")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model presupuesto_categoria {
+  id_limite         BigInt      @id @default(autoincrement())
+  id_presupuesto    BigInt
+  id_categoria      Int
+  monto_limite      Decimal     @db.Decimal(14, 2)
+  umbral_alerta_pct Int         @db.SmallInt
+  alerta            alerta[]
+  categoria         categoria   @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  presupuesto       presupuesto @relation(fields: [id_presupuesto], references: [id_presupuesto], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_categoria], map: "idx_presupuesto_categoria_categoria")
+  @@index([id_presupuesto], map: "idx_presupuesto_categoria_presupuesto")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tipo_alerta {
+  id_tipo_alerta Int      @id @db.SmallInt
+  codigo         String   @unique @db.VarChar(40)
+  descripcion    String   @db.VarChar(200)
+  alerta         alerta[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tipo_categoria {
+  id_tipo_categoria  Int             @id @db.SmallInt
+  nombre             String          @unique @db.VarChar(30)
+  id_tipo_movimiento Int             @db.SmallInt
+  categoria          categoria[]
+  tipo_movimiento    tipo_movimiento @relation(fields: [id_tipo_movimiento], references: [id_tipo_movimiento], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tipo_movimiento {
+  id_tipo_movimiento Int              @id @db.SmallInt
+  nombre             String           @unique @db.VarChar(20)
+  tipo_categoria     tipo_categoria[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model usuario {
+  id_usuario       BigInt             @id @default(autoincrement())
+  id_perfil        Int                @db.SmallInt
+  codigo_moneda    String             @db.Char(3)
+  nombres          String             @db.VarChar(80)
+  apellidos        String             @db.VarChar(80)
+  email            String             @unique @db.VarChar(120)
+  hash_contrasena  String             @db.VarChar(255)
+  telefono         String?            @db.VarChar(20)
+  fecha_nacimiento DateTime?          @db.Date
+  activo           Boolean
+  fecha_registro   DateTime           @db.Timestamp(6)
+  alerta           alerta[]
+  categoria        categoria[]
+  compra_impulsiva compra_impulsiva[]
+  emprendimiento   emprendimiento[]
+  meta_ahorro      meta_ahorro[]
+  movimiento       movimiento[]
+  presupuesto      presupuesto[]
+  moneda           moneda             @relation(fields: [codigo_moneda], references: [codigo_moneda], onDelete: NoAction, onUpdate: NoAction)
+  perfil_usuario   perfil_usuario     @relation(fields: [id_perfil], references: [id_perfil], onDelete: NoAction, onUpdate: NoAction)
+}
