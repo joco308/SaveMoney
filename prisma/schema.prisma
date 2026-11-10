@@ -258,6 +258,22 @@ model usuario {
   meta_ahorro      meta_ahorro[]
   movimiento       movimiento[]
   presupuesto      presupuesto[]
+  sesion_usuario   sesion_usuario[]
   moneda           moneda             @relation(fields: [codigo_moneda], references: [codigo_moneda], onDelete: NoAction, onUpdate: NoAction)
   perfil_usuario   perfil_usuario     @relation(fields: [id_perfil], references: [id_perfil], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model sesion_usuario {
+  id_sesion          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_usuario         BigInt
+  refresh_token_hash String    @unique @db.VarChar(64)
+  creada_en          DateTime  @default(now()) @db.Timestamp(6)
+  actualizada_en     DateTime  @default(now()) @db.Timestamp(6)
+  expira_en          DateTime  @db.Timestamp(6)
+  revocada_en        DateTime? @db.Timestamp(6)
+  usuario            usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expira_en], map: "idx_sesion_usuario_expira")
+  @@index([id_usuario], map: "idx_sesion_usuario_usuario")
 }

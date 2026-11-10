@@ -1,32 +1,29 @@
 import "dotenv/config";
 import { z } from "zod";
 
-/** Trata las variables vacías de `.env` como no definidas. */
 const emptyToUndefined = (value: unknown): unknown =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
 
-const optionalUrl = z.preprocess(emptyToUndefined, z.string().url().optional());
-const optionalSecret = z.preprocess(emptyToUndefined, z.string().min(1).optional());
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().positive().default(3000),
 
-const envSchema = z
-  .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    PORT: z.coerce.number().int().positive().default(3000),
-    DATABASE_URL: z.string().min(1, "DATABASE_URL es obligatoria"),
-    DIRECT_URL: z.string().min(1, "DIRECT_URL es obligatoria"),
-    SUPABASE_URL: optionalUrl,
-    SUPABASE_JWKS_URL: optionalUrl,
-    SUPABASE_JWT_SECRET: optionalSecret,
-    CORS_ORIGIN: z.preprocess(emptyToUndefined, z.string().min(1).default("*")),
-  })
-  .refine(
-    (value) => Boolean(value.SUPABASE_JWT_SECRET || value.SUPABASE_JWKS_URL || value.SUPABASE_URL),
-    {
-      message:
-        "Configura SUPABASE_URL o SUPABASE_JWKS_URL (claves asimétricas) o SUPABASE_JWT_SECRET (HS256 legacy)",
-      path: ["SUPABASE_URL"],
-    },
-  );
+  DATABASE_URL: z.string().min(1, "DATABASE_URL es obligatoria"),
+  DIRECT_URL: z.string().min(1, "DIRECT_URL es obligatoria"),
+
+  JWT_SECRET: z.preprocess(
+    emptyToUndefined,
+    z.string().min(32, "JWT_SECRET debe tener al menos 32 caracteres"),
+  ),
+
+  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(2592000),
+
+  CORS_ORIGIN: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).default("*"),
+  ),
+});
 
 const parsed = envSchema.safeParse(process.env);
 
