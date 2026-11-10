@@ -132,3 +132,8 @@ export type tipo_movimiento = Prisma.tipo_movimientoModel
  * This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
  */
 export type usuario = Prisma.usuarioModel
+/**
+ * Model sesion_usuario
+ * This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+ */
+export type sesion_usuario = Prisma.sesion_usuarioModel

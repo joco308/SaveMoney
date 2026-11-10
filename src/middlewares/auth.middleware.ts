@@ -1,81 +1,77 @@
 import type { RequestHandler } from "express";
-import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify } from "jose";
+import { jwtVerify } from "jose";
 import { env } from "../config/env";
-import { findUsuarioByEmail } from "../services/usuario.service";
+import { getUsuarioById } from "../services/usuario.service";
 import { ApiError } from "../types/api-error";
 
-const supabaseBaseUrl = env.SUPABASE_URL?.replace(/\/+$/, "");
-const issuer = supabaseBaseUrl ? `${supabaseBaseUrl}/auth/v1` : undefined;
-const jwksUrl =
-  env.SUPABASE_JWKS_URL ??
-  (supabaseBaseUrl ? `${supabaseBaseUrl}/auth/v1/.well-known/jwks.json` : undefined);
-
-const jwks = jwksUrl ? createRemoteJWKSet(new URL(jwksUrl)) : undefined;
-const jwtSecret = env.SUPABASE_JWT_SECRET
-  ? new TextEncoder().encode(env.SUPABASE_JWT_SECRET)
-  : undefined;
+const jwtSecret = new TextEncoder().encode(env.AUTH_JWT_SECRET);
 
 /**
- * Verifica el access token de Supabase y deja el contexto en `req.auth`.
- * Soporta claves asimétricas (JWKS) y el secreto HS256 legacy.
+ * Verifica el access token local (HS256) y deja el contexto en `req.auth`.
+ * El `sub` es el `id_usuario` de SaveMoney (BigInt), no un UUID de Supabase.
  */
-export const requireAuth: RequestHandler = async (req, _res, next) => {
-  try {
-    const authorization = req.headers.authorization;
-    if (!authorization?.startsWith("Bearer ")) {
-      throw ApiError.unauthorized("Falta el header Authorization: Bearer <token>");
-    }
-
-    const token = authorization.slice("Bearer ".length).trim();
-    if (!token) {
-      throw ApiError.unauthorized("Token vacío");
-    }
-
-    const { alg } = decodeProtectedHeader(token);
-    const key = alg === "HS256" && jwtSecret ? jwtSecret : (jwks ?? jwtSecret);
-    if (!key) {
-      throw ApiError.unauthorized("No hay una clave configurada para validar el JWT");
-    }
-
-    const { payload } = await jwtVerify(token, key, {
-      issuer,
-      audience: "authenticated",
-    });
-
-    if (!payload.sub) {
-      throw ApiError.unauthorized("El token no contiene el claim sub");
-    }
-
-    req.auth = {
-      sub: payload.sub,
-      email: typeof payload.email === "string" ? payload.email : undefined,
-      role: typeof payload.role === "string" ? payload.role : undefined,
-    };
-
-    next();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      next(error);
-      return;
-    }
-    next(ApiError.unauthorized("Token inválido o expirado"));
+export const requireAuth: RequestHandler = (req, _res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization?.startsWith("Bearer ")) {
+    next(ApiError.unauthorized("Falta el header Authorization: Bearer <token>"));
+    return;
   }
+
+  const token = authorization.slice("Bearer ".length).trim();
+  if (!token) {
+    next(ApiError.unauthorized("Token vacío"));
+    return;
+  }
+
+  void jwtVerify(token, jwtSecret, {
+    issuer: env.AUTH_JWT_ISSUER,
+    audience: "authenticated",
+  })
+    .then(({ payload }) => {
+      if (payload.typ !== "access") {
+        next(ApiError.unauthorized("Tipo de token inválido"));
+        return;
+      }
+
+      if (!payload.sub) {
+        next(ApiError.unauthorized("El token no contiene el claim sub"));
+        return;
+      }
+
+      req.auth = {
+        sub: payload.sub,
+        email: typeof payload.email === "string" ? payload.email : undefined,
+      };
+
+      next();
+    })
+    .catch(() => {
+      next(ApiError.unauthorized("Token inválido o expirado"));
+    });
 };
 
 /**
- * Resuelve el usuario de la aplicación a partir del email del JWT y lo deja
- * en `req.usuario`. Los servicios deben seguir filtrando por `id_usuario`.
+ * Resuelve el usuario de la aplicación a partir del `sub` del access token
+ * local (el `id_usuario` de SaveMoney) y lo deja en `req.usuario`.
+ * Los servicios deben seguir filtrando por `id_usuario`.
  */
 export const requireUsuario: RequestHandler = async (req, _res, next) => {
   try {
-    const email = req.auth?.email;
-    if (!email) {
-      throw ApiError.unauthorized("El token no incluye un email");
+    const sub = req.auth?.sub;
+    if (!sub) {
+      throw ApiError.unauthorized("El token no contiene el claim sub");
     }
 
-    const usuario = await findUsuarioByEmail(email);
+    let idUsuario: bigint;
+    try {
+      idUsuario = BigInt(sub);
+    } catch {
+      throw ApiError.unauthorized("El claim sub no es un id_usuario válido");
+    }
+
+    const usuario = await getUsuarioById(idUsuario);
     if (!usuario) {
-      throw ApiError.forbidden("No existe un usuario de SaveMoney asociado a este email");
+      throw ApiError.forbidden("No existe un usuario de SaveMoney asociado a este id");
     }
     if (!usuario.activo) {
       throw ApiError.forbidden("El usuario está inactivo");

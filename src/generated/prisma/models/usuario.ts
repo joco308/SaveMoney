@@ -275,6 +275,7 @@ export type usuarioWhereInput = {
   meta_ahorro?: Prisma.Meta_ahorroListRelationFilter
   movimiento?: Prisma.MovimientoListRelationFilter
   presupuesto?: Prisma.PresupuestoListRelationFilter
+  sesion_usuario?: Prisma.Sesion_usuarioListRelationFilter
   moneda?: Prisma.XOR<Prisma.MonedaScalarRelationFilter, Prisma.monedaWhereInput>
   perfil_usuario?: Prisma.XOR<Prisma.Perfil_usuarioScalarRelationFilter, Prisma.perfil_usuarioWhereInput>
 }
@@ -298,6 +299,7 @@ export type usuarioOrderByWithRelationInput = {
   meta_ahorro?: Prisma.meta_ahorroOrderByRelationAggregateInput
   movimiento?: Prisma.movimientoOrderByRelationAggregateInput
   presupuesto?: Prisma.presupuestoOrderByRelationAggregateInput
+  sesion_usuario?: Prisma.sesion_usuarioOrderByRelationAggregateInput
   moneda?: Prisma.monedaOrderByWithRelationInput
   perfil_usuario?: Prisma.perfil_usuarioOrderByWithRelationInput
 }
@@ -324,6 +326,7 @@ export type usuarioWhereUniqueInput = Prisma.AtLeast<{
   meta_ahorro?: Prisma.Meta_ahorroListRelationFilter
   movimiento?: Prisma.MovimientoListRelationFilter
   presupuesto?: Prisma.PresupuestoListRelationFilter
+  sesion_usuario?: Prisma.Sesion_usuarioListRelationFilter
   moneda?: Prisma.XOR<Prisma.MonedaScalarRelationFilter, Prisma.monedaWhereInput>
   perfil_usuario?: Prisma.XOR<Prisma.Perfil_usuarioScalarRelationFilter, Prisma.perfil_usuarioWhereInput>
 }, "id_usuario" | "email">
@@ -381,6 +384,7 @@ export type usuarioCreateInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -404,6 +408,7 @@ export type usuarioUncheckedCreateInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioUpdateInput = {
@@ -423,6 +428,7 @@ export type usuarioUpdateInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -446,6 +452,7 @@ export type usuarioUncheckedUpdateInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateManyInput = {
@@ -744,6 +751,20 @@ export type usuarioUpdateOneRequiredWithoutPresupuestoNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.usuarioUpdateToOneWithWhereWithoutPresupuestoInput, Prisma.usuarioUpdateWithoutPresupuestoInput>, Prisma.usuarioUncheckedUpdateWithoutPresupuestoInput>
 }
 
+export type usuarioCreateNestedOneWithoutSesion_usuarioInput = {
+  create?: Prisma.XOR<Prisma.usuarioCreateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedCreateWithoutSesion_usuarioInput>
+  connectOrCreate?: Prisma.usuarioCreateOrConnectWithoutSesion_usuarioInput
+  connect?: Prisma.usuarioWhereUniqueInput
+}
+
+export type usuarioUpdateOneRequiredWithoutSesion_usuarioNestedInput = {
+  create?: Prisma.XOR<Prisma.usuarioCreateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedCreateWithoutSesion_usuarioInput>
+  connectOrCreate?: Prisma.usuarioCreateOrConnectWithoutSesion_usuarioInput
+  upsert?: Prisma.usuarioUpsertWithoutSesion_usuarioInput
+  connect?: Prisma.usuarioWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usuarioUpdateToOneWithWhereWithoutSesion_usuarioInput, Prisma.usuarioUpdateWithoutSesion_usuarioInput>, Prisma.usuarioUncheckedUpdateWithoutSesion_usuarioInput>
+}
+
 export type usuarioCreateWithoutAlertaInput = {
   id_usuario?: bigint | number
   nombres: string
@@ -760,6 +781,7 @@ export type usuarioCreateWithoutAlertaInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -782,6 +804,7 @@ export type usuarioUncheckedCreateWithoutAlertaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutAlertaInput = {
@@ -816,6 +839,7 @@ export type usuarioUpdateWithoutAlertaInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -838,6 +862,7 @@ export type usuarioUncheckedUpdateWithoutAlertaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutCategoriaInput = {
@@ -856,6 +881,7 @@ export type usuarioCreateWithoutCategoriaInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -878,6 +904,7 @@ export type usuarioUncheckedCreateWithoutCategoriaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutCategoriaInput = {
@@ -912,6 +939,7 @@ export type usuarioUpdateWithoutCategoriaInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -934,6 +962,7 @@ export type usuarioUncheckedUpdateWithoutCategoriaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutCompra_impulsivaInput = {
@@ -952,6 +981,7 @@ export type usuarioCreateWithoutCompra_impulsivaInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -974,6 +1004,7 @@ export type usuarioUncheckedCreateWithoutCompra_impulsivaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutCompra_impulsivaInput = {
@@ -1008,6 +1039,7 @@ export type usuarioUpdateWithoutCompra_impulsivaInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -1030,6 +1062,7 @@ export type usuarioUncheckedUpdateWithoutCompra_impulsivaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutEmprendimientoInput = {
@@ -1048,6 +1081,7 @@ export type usuarioCreateWithoutEmprendimientoInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -1070,6 +1104,7 @@ export type usuarioUncheckedCreateWithoutEmprendimientoInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutEmprendimientoInput = {
@@ -1104,6 +1139,7 @@ export type usuarioUpdateWithoutEmprendimientoInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -1126,6 +1162,7 @@ export type usuarioUncheckedUpdateWithoutEmprendimientoInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutMeta_ahorroInput = {
@@ -1144,6 +1181,7 @@ export type usuarioCreateWithoutMeta_ahorroInput = {
   emprendimiento?: Prisma.emprendimientoCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -1166,6 +1204,7 @@ export type usuarioUncheckedCreateWithoutMeta_ahorroInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutMeta_ahorroInput = {
@@ -1200,6 +1239,7 @@ export type usuarioUpdateWithoutMeta_ahorroInput = {
   emprendimiento?: Prisma.emprendimientoUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -1222,6 +1262,7 @@ export type usuarioUncheckedUpdateWithoutMeta_ahorroInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutMonedaInput = {
@@ -1241,6 +1282,7 @@ export type usuarioCreateWithoutMonedaInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
 
@@ -1262,6 +1304,7 @@ export type usuarioUncheckedCreateWithoutMonedaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutMonedaInput = {
@@ -1323,6 +1366,7 @@ export type usuarioCreateWithoutMovimientoInput = {
   emprendimiento?: Prisma.emprendimientoCreateNestedManyWithoutUsuarioInput
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -1345,6 +1389,7 @@ export type usuarioUncheckedCreateWithoutMovimientoInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedCreateNestedManyWithoutUsuarioInput
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutMovimientoInput = {
@@ -1379,6 +1424,7 @@ export type usuarioUpdateWithoutMovimientoInput = {
   emprendimiento?: Prisma.emprendimientoUpdateManyWithoutUsuarioNestedInput
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -1401,6 +1447,7 @@ export type usuarioUncheckedUpdateWithoutMovimientoInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateWithoutPerfil_usuarioInput = {
@@ -1420,6 +1467,7 @@ export type usuarioCreateWithoutPerfil_usuarioInput = {
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
 }
 
@@ -1441,6 +1489,7 @@ export type usuarioUncheckedCreateWithoutPerfil_usuarioInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
   presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutPerfil_usuarioInput = {
@@ -1485,6 +1534,7 @@ export type usuarioCreateWithoutPresupuestoInput = {
   emprendimiento?: Prisma.emprendimientoCreateNestedManyWithoutUsuarioInput
   meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioCreateNestedManyWithoutUsuarioInput
   moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
   perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
 }
@@ -1507,6 +1557,7 @@ export type usuarioUncheckedCreateWithoutPresupuestoInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedCreateNestedManyWithoutUsuarioInput
   meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
   movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedCreateNestedManyWithoutUsuarioInput
 }
 
 export type usuarioCreateOrConnectWithoutPresupuestoInput = {
@@ -1541,6 +1592,7 @@ export type usuarioUpdateWithoutPresupuestoInput = {
   emprendimiento?: Prisma.emprendimientoUpdateManyWithoutUsuarioNestedInput
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
@@ -1563,6 +1615,107 @@ export type usuarioUncheckedUpdateWithoutPresupuestoInput = {
   emprendimiento?: Prisma.emprendimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
+}
+
+export type usuarioCreateWithoutSesion_usuarioInput = {
+  id_usuario?: bigint | number
+  nombres: string
+  apellidos: string
+  email: string
+  hash_contrasena: string
+  telefono?: string | null
+  fecha_nacimiento?: Date | string | null
+  activo: boolean
+  fecha_registro: Date | string
+  alerta?: Prisma.alertaCreateNestedManyWithoutUsuarioInput
+  categoria?: Prisma.categoriaCreateNestedManyWithoutUsuarioInput
+  compra_impulsiva?: Prisma.compra_impulsivaCreateNestedManyWithoutUsuarioInput
+  emprendimiento?: Prisma.emprendimientoCreateNestedManyWithoutUsuarioInput
+  meta_ahorro?: Prisma.meta_ahorroCreateNestedManyWithoutUsuarioInput
+  movimiento?: Prisma.movimientoCreateNestedManyWithoutUsuarioInput
+  presupuesto?: Prisma.presupuestoCreateNestedManyWithoutUsuarioInput
+  moneda: Prisma.monedaCreateNestedOneWithoutUsuarioInput
+  perfil_usuario: Prisma.perfil_usuarioCreateNestedOneWithoutUsuarioInput
+}
+
+export type usuarioUncheckedCreateWithoutSesion_usuarioInput = {
+  id_usuario?: bigint | number
+  id_perfil: number
+  codigo_moneda: string
+  nombres: string
+  apellidos: string
+  email: string
+  hash_contrasena: string
+  telefono?: string | null
+  fecha_nacimiento?: Date | string | null
+  activo: boolean
+  fecha_registro: Date | string
+  alerta?: Prisma.alertaUncheckedCreateNestedManyWithoutUsuarioInput
+  categoria?: Prisma.categoriaUncheckedCreateNestedManyWithoutUsuarioInput
+  compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedManyWithoutUsuarioInput
+  emprendimiento?: Prisma.emprendimientoUncheckedCreateNestedManyWithoutUsuarioInput
+  meta_ahorro?: Prisma.meta_ahorroUncheckedCreateNestedManyWithoutUsuarioInput
+  movimiento?: Prisma.movimientoUncheckedCreateNestedManyWithoutUsuarioInput
+  presupuesto?: Prisma.presupuestoUncheckedCreateNestedManyWithoutUsuarioInput
+}
+
+export type usuarioCreateOrConnectWithoutSesion_usuarioInput = {
+  where: Prisma.usuarioWhereUniqueInput
+  create: Prisma.XOR<Prisma.usuarioCreateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedCreateWithoutSesion_usuarioInput>
+}
+
+export type usuarioUpsertWithoutSesion_usuarioInput = {
+  update: Prisma.XOR<Prisma.usuarioUpdateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedUpdateWithoutSesion_usuarioInput>
+  create: Prisma.XOR<Prisma.usuarioCreateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedCreateWithoutSesion_usuarioInput>
+  where?: Prisma.usuarioWhereInput
+}
+
+export type usuarioUpdateToOneWithWhereWithoutSesion_usuarioInput = {
+  where?: Prisma.usuarioWhereInput
+  data: Prisma.XOR<Prisma.usuarioUpdateWithoutSesion_usuarioInput, Prisma.usuarioUncheckedUpdateWithoutSesion_usuarioInput>
+}
+
+export type usuarioUpdateWithoutSesion_usuarioInput = {
+  id_usuario?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  nombres?: Prisma.StringFieldUpdateOperationsInput | string
+  apellidos?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  alerta?: Prisma.alertaUpdateManyWithoutUsuarioNestedInput
+  categoria?: Prisma.categoriaUpdateManyWithoutUsuarioNestedInput
+  compra_impulsiva?: Prisma.compra_impulsivaUpdateManyWithoutUsuarioNestedInput
+  emprendimiento?: Prisma.emprendimientoUpdateManyWithoutUsuarioNestedInput
+  meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
+  movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
+  presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
+  perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
+}
+
+export type usuarioUncheckedUpdateWithoutSesion_usuarioInput = {
+  id_usuario?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  id_perfil?: Prisma.IntFieldUpdateOperationsInput | number
+  codigo_moneda?: Prisma.StringFieldUpdateOperationsInput | string
+  nombres?: Prisma.StringFieldUpdateOperationsInput | string
+  apellidos?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  alerta?: Prisma.alertaUncheckedUpdateManyWithoutUsuarioNestedInput
+  categoria?: Prisma.categoriaUncheckedUpdateManyWithoutUsuarioNestedInput
+  compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateManyWithoutUsuarioNestedInput
+  emprendimiento?: Prisma.emprendimientoUncheckedUpdateManyWithoutUsuarioNestedInput
+  meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
+  movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
+  presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioCreateManyMonedaInput = {
@@ -1595,6 +1748,7 @@ export type usuarioUpdateWithoutMonedaInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   perfil_usuario?: Prisma.perfil_usuarioUpdateOneRequiredWithoutUsuarioNestedInput
 }
 
@@ -1616,6 +1770,7 @@ export type usuarioUncheckedUpdateWithoutMonedaInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioUncheckedUpdateManyWithoutMonedaInput = {
@@ -1661,6 +1816,7 @@ export type usuarioUpdateWithoutPerfil_usuarioInput = {
   meta_ahorro?: Prisma.meta_ahorroUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUpdateManyWithoutUsuarioNestedInput
   moneda?: Prisma.monedaUpdateOneRequiredWithoutUsuarioNestedInput
 }
 
@@ -1682,6 +1838,7 @@ export type usuarioUncheckedUpdateWithoutPerfil_usuarioInput = {
   meta_ahorro?: Prisma.meta_ahorroUncheckedUpdateManyWithoutUsuarioNestedInput
   movimiento?: Prisma.movimientoUncheckedUpdateManyWithoutUsuarioNestedInput
   presupuesto?: Prisma.presupuestoUncheckedUpdateManyWithoutUsuarioNestedInput
+  sesion_usuario?: Prisma.sesion_usuarioUncheckedUpdateManyWithoutUsuarioNestedInput
 }
 
 export type usuarioUncheckedUpdateManyWithoutPerfil_usuarioInput = {
@@ -1710,6 +1867,7 @@ export type UsuarioCountOutputType = {
   meta_ahorro: number
   movimiento: number
   presupuesto: number
+  sesion_usuario: number
 }
 
 export type UsuarioCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1720,6 +1878,7 @@ export type UsuarioCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   meta_ahorro?: boolean | UsuarioCountOutputTypeCountMeta_ahorroArgs
   movimiento?: boolean | UsuarioCountOutputTypeCountMovimientoArgs
   presupuesto?: boolean | UsuarioCountOutputTypeCountPresupuestoArgs
+  sesion_usuario?: boolean | UsuarioCountOutputTypeCountSesion_usuarioArgs
 }
 
 /**
@@ -1781,6 +1940,13 @@ export type UsuarioCountOutputTypeCountPresupuestoArgs<ExtArgs extends runtime.T
   where?: Prisma.presupuestoWhereInput
 }
 
+/**
+ * UsuarioCountOutputType without action
+ */
+export type UsuarioCountOutputTypeCountSesion_usuarioArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.sesion_usuarioWhereInput
+}
+
 
 export type usuarioSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id_usuario?: boolean
@@ -1801,6 +1967,7 @@ export type usuarioSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   meta_ahorro?: boolean | Prisma.usuario$meta_ahorroArgs<ExtArgs>
   movimiento?: boolean | Prisma.usuario$movimientoArgs<ExtArgs>
   presupuesto?: boolean | Prisma.usuario$presupuestoArgs<ExtArgs>
+  sesion_usuario?: boolean | Prisma.usuario$sesion_usuarioArgs<ExtArgs>
   moneda?: boolean | Prisma.monedaDefaultArgs<ExtArgs>
   perfil_usuario?: boolean | Prisma.perfil_usuarioDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.UsuarioCountOutputTypeDefaultArgs<ExtArgs>
@@ -1861,6 +2028,7 @@ export type usuarioInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   meta_ahorro?: boolean | Prisma.usuario$meta_ahorroArgs<ExtArgs>
   movimiento?: boolean | Prisma.usuario$movimientoArgs<ExtArgs>
   presupuesto?: boolean | Prisma.usuario$presupuestoArgs<ExtArgs>
+  sesion_usuario?: boolean | Prisma.usuario$sesion_usuarioArgs<ExtArgs>
   moneda?: boolean | Prisma.monedaDefaultArgs<ExtArgs>
   perfil_usuario?: boolean | Prisma.perfil_usuarioDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.UsuarioCountOutputTypeDefaultArgs<ExtArgs>
@@ -1884,6 +2052,7 @@ export type $usuarioPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     meta_ahorro: Prisma.$meta_ahorroPayload<ExtArgs>[]
     movimiento: Prisma.$movimientoPayload<ExtArgs>[]
     presupuesto: Prisma.$presupuestoPayload<ExtArgs>[]
+    sesion_usuario: Prisma.$sesion_usuarioPayload<ExtArgs>[]
     moneda: Prisma.$monedaPayload<ExtArgs>
     perfil_usuario: Prisma.$perfil_usuarioPayload<ExtArgs>
   }
@@ -2300,6 +2469,7 @@ export interface Prisma__usuarioClient<T, Null = never, ExtArgs extends runtime.
   meta_ahorro<T extends Prisma.usuario$meta_ahorroArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.usuario$meta_ahorroArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$meta_ahorroPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   movimiento<T extends Prisma.usuario$movimientoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.usuario$movimientoArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$movimientoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   presupuesto<T extends Prisma.usuario$presupuestoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.usuario$presupuestoArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$presupuestoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sesion_usuario<T extends Prisma.usuario$sesion_usuarioArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.usuario$sesion_usuarioArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$sesion_usuarioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   moneda<T extends Prisma.monedaDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.monedaDefaultArgs<ExtArgs>>): Prisma.Prisma__monedaClient<runtime.Types.Result.GetResult<Prisma.$monedaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   perfil_usuario<T extends Prisma.perfil_usuarioDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.perfil_usuarioDefaultArgs<ExtArgs>>): Prisma.Prisma__perfil_usuarioClient<runtime.Types.Result.GetResult<Prisma.$perfil_usuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
@@ -2908,6 +3078,30 @@ export type usuario$presupuestoArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.PresupuestoScalarFieldEnum | Prisma.PresupuestoScalarFieldEnum[]
+}
+
+/**
+ * usuario.sesion_usuario
+ */
+export type usuario$sesion_usuarioArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the sesion_usuario
+   */
+  select?: Prisma.sesion_usuarioSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the sesion_usuario
+   */
+  omit?: Prisma.sesion_usuarioOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.sesion_usuarioInclude<ExtArgs> | null
+  where?: Prisma.sesion_usuarioWhereInput
+  orderBy?: Prisma.sesion_usuarioOrderByWithRelationInput | Prisma.sesion_usuarioOrderByWithRelationInput[]
+  cursor?: Prisma.sesion_usuarioWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Sesion_usuarioScalarFieldEnum | Prisma.Sesion_usuarioScalarFieldEnum[]
 }
 
 /**
