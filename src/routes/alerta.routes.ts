@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { requireAuth, requireUsuario } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { paramsSchema, paginacionSchema } from "../schemas/recurso.schema";
+import { lecturaSchema } from "../schemas/alerta.schema";
+import * as controller from "../controllers/alerta.controller";
+export const router = Router();
+router.use(requireAuth, requireUsuario);
+router.get("/", validate({ query: paginacionSchema }), controller.listar);
+router.get("/:id", validate({ params: paramsSchema }), controller.obtener);
+router.patch("/:id/lectura", validate({ params: paramsSchema, body: lecturaSchema }), controller.marcarLectura);
+router.delete("/:id", validate({ params: paramsSchema }), controller.eliminar);
