@@ -37,7 +37,7 @@ export const crearMovimientoSchema = z.object({
     .positive("El monto debe ser mayor que cero")
     .max(999999999999.99)
     .refine(
-      (value) => Number.isInteger(value * 100),
+      (value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8,
       "El monto admite como máximo dos decimales",
     ),
   fecha_movimiento: fechaSchema,

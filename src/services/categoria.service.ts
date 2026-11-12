@@ -102,6 +102,15 @@ export async function actualizarCategoria(
       id_categoria: id,
       id_usuario: usuarioId,
     },
+    include: {
+      _count: {
+        select: {
+          movimiento: true,
+          compra_impulsiva: true,
+          presupuesto_categoria: true,
+        },
+      },
+    },
   });
 
   if (!categoria) {
@@ -110,7 +119,22 @@ export async function actualizarCategoria(
     );
   }
 
-  if (data.id_tipo_categoria !== undefined) {
+  if (
+    data.id_tipo_categoria !== undefined &&
+    data.id_tipo_categoria !== categoria.id_tipo_categoria
+  ) {
+    const referencias =
+      categoria._count.movimiento +
+      categoria._count.compra_impulsiva +
+      categoria._count.presupuesto_categoria;
+
+    if (referencias > 0) {
+      throw new ApiError(
+        409,
+        "CONFLICT",
+        "No se puede cambiar el tipo de una categoría que tiene registros relacionados. Puedes modificar su nombre.",
+      );
+    }
     const tipo = await prisma.tipo_categoria.findUnique({
       where: { id_tipo_categoria: data.id_tipo_categoria },
     });

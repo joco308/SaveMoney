@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { ApiError } from "../types/api-error";
+import { evaluarAlertasPresupuesto } from "./alerta.service";
 
 const movimientoInclude = {
   categoria: {
@@ -184,6 +185,12 @@ export async function crearMovimiento(
     include: movimientoInclude,
   });
 
+  await evaluarAlertasPresupuesto(
+    usuarioId,
+    movimiento.fecha_movimiento,
+    movimiento.id_emprendimiento,
+  );
+
   return serializarMovimiento(movimiento);
 }
 
@@ -232,6 +239,12 @@ export async function actualizarMovimiento(
     },
     include: movimientoInclude,
   });
+
+  await evaluarAlertasPresupuesto(
+    usuarioId,
+    movimiento.fecha_movimiento,
+    movimiento.id_emprendimiento,
+  );
 
   return serializarMovimiento(movimiento);
 }

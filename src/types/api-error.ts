@@ -34,4 +34,8 @@ export class ApiError extends Error {
   static notFound(message = "Recurso no encontrado"): ApiError {
     return new ApiError(404, "NOT_FOUND", message);
   }
+
+  static conflict(message: string): ApiError {
+    return new ApiError(409, "CONFLICT", message);
+  }
 }
