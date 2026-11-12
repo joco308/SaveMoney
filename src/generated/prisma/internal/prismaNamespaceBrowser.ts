@@ -68,7 +68,8 @@ export const ModelName = {
   tipo_alerta: 'tipo_alerta',
   tipo_categoria: 'tipo_categoria',
   tipo_movimiento: 'tipo_movimiento',
-  usuario: 'usuario'
+  usuario: 'usuario',
+  sesion_usuario: 'sesion_usuario'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -292,6 +293,19 @@ export const UsuarioScalarFieldEnum = {
 } as const
 
 export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]
+
+
+export const Sesion_usuarioScalarFieldEnum = {
+  id_sesion: 'id_sesion',
+  id_usuario: 'id_usuario',
+  refresh_token_hash: 'refresh_token_hash',
+  creada_en: 'creada_en',
+  actualizada_en: 'actualizada_en',
+  expira_en: 'expira_en',
+  revocada_en: 'revocada_en'
+} as const
+
+export type Sesion_usuarioScalarFieldEnum = (typeof Sesion_usuarioScalarFieldEnum)[keyof typeof Sesion_usuarioScalarFieldEnum]
 
 
 export const SortOrder = {

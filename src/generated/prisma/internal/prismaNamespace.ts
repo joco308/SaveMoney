@@ -414,7 +414,8 @@ export const ModelName = {
   tipo_alerta: 'tipo_alerta',
   tipo_categoria: 'tipo_categoria',
   tipo_movimiento: 'tipo_movimiento',
-  usuario: 'usuario'
+  usuario: 'usuario',
+  sesion_usuario: 'sesion_usuario'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -430,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "alerta" | "aporte_meta" | "categoria" | "compra_impulsiva" | "emprendimiento" | "estado_espera" | "estado_meta" | "meta_ahorro" | "metodo_pago" | "moneda" | "movimiento" | "perfil_usuario" | "presupuesto" | "presupuesto_categoria" | "tipo_alerta" | "tipo_categoria" | "tipo_movimiento" | "usuario"
+    modelProps: "alerta" | "aporte_meta" | "categoria" | "compra_impulsiva" | "emprendimiento" | "estado_espera" | "estado_meta" | "meta_ahorro" | "metodo_pago" | "moneda" | "movimiento" | "perfil_usuario" | "presupuesto" | "presupuesto_categoria" | "tipo_alerta" | "tipo_categoria" | "tipo_movimiento" | "usuario" | "sesion_usuario"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1766,6 +1767,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    sesion_usuario: {
+      payload: Prisma.$sesion_usuarioPayload<ExtArgs>
+      fields: Prisma.sesion_usuarioFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.sesion_usuarioFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.sesion_usuarioFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        findFirst: {
+          args: Prisma.sesion_usuarioFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.sesion_usuarioFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        findMany: {
+          args: Prisma.sesion_usuarioFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>[]
+        }
+        create: {
+          args: Prisma.sesion_usuarioCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        createMany: {
+          args: Prisma.sesion_usuarioCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.sesion_usuarioCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>[]
+        }
+        delete: {
+          args: Prisma.sesion_usuarioDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        update: {
+          args: Prisma.sesion_usuarioUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        deleteMany: {
+          args: Prisma.sesion_usuarioDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.sesion_usuarioUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.sesion_usuarioUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>[]
+        }
+        upsert: {
+          args: Prisma.sesion_usuarioUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$sesion_usuarioPayload>
+        }
+        aggregate: {
+          args: Prisma.Sesion_usuarioAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSesion_usuario>
+        }
+        groupBy: {
+          args: Prisma.sesion_usuarioGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Sesion_usuarioGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.sesion_usuarioCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Sesion_usuarioCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2010,6 +2085,19 @@ export const UsuarioScalarFieldEnum = {
 } as const
 
 export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]
+
+
+export const Sesion_usuarioScalarFieldEnum = {
+  id_sesion: 'id_sesion',
+  id_usuario: 'id_usuario',
+  refresh_token_hash: 'refresh_token_hash',
+  creada_en: 'creada_en',
+  actualizada_en: 'actualizada_en',
+  expira_en: 'expira_en',
+  revocada_en: 'revocada_en'
+} as const
+
+export type Sesion_usuarioScalarFieldEnum = (typeof Sesion_usuarioScalarFieldEnum)[keyof typeof Sesion_usuarioScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -2301,6 +2389,7 @@ export type GlobalOmitConfig = {
   tipo_categoria?: Prisma.tipo_categoriaOmit
   tipo_movimiento?: Prisma.tipo_movimientoOmit
   usuario?: Prisma.usuarioOmit
+  sesion_usuario?: Prisma.sesion_usuarioOmit
 }
 
 /* Types for Logging */
