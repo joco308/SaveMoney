@@ -3,9 +3,14 @@ import { Prisma } from "../generated/prisma/client";
 import { ApiError } from "../types/api-error";
 import { evaluarAlertasPresupuesto, evaluarAlertasComprasFinalizadas } from "./alerta.service";
 
-const ESTADO_EN_ESPERA = 1;
-const ESTADO_COMPRADA = 2;
-const ESTADO_DESCARTADA = 3;
+const nombresPendientes = ["En espera", "Pendiente"];
+
+async function buscarEstadoCompra(nombres: string[]) {
+  const estados = await prisma.estado_espera.findMany({ where: { nombre: { in: nombres } } });
+  const estado = nombres.map((nombre) => estados.find((item) => item.nombre === nombre)).find(Boolean);
+  if (!estado) throw ApiError.conflict(`Falta configurar el estado de compra: ${nombres.join(" o ")}`);
+  return estado.id_estado_espera;
+}
 
 const compraInclude = {
   categoria: {
@@ -116,8 +121,8 @@ async function obtenerCompraPropia(
   return compra;
 }
 
-function verificarEnEspera(compra: { id_estado_espera: number }) {
-  if (compra.id_estado_espera !== ESTADO_EN_ESPERA) {
+function verificarEnEspera(compra: { estado_espera: { nombre: string } }) {
+  if (!nombresPendientes.includes(compra.estado_espera.nombre)) {
     throw ApiError.conflict(
       "Esta compra ya fue resuelta y no puede modificarse",
     );
@@ -185,6 +190,7 @@ export async function crearCompraImpulsiva(
 ) {
   await validarCategoria(data.id_categoria, usuarioId);
 
+  const estadoPendiente = await buscarEstadoCompra(nombresPendientes);
   const inicio = new Date();
   const fin = new Date(
     inicio.getTime() + data.dias_espera * 24 * 60 * 60 * 1000,
@@ -194,7 +200,7 @@ export async function crearCompraImpulsiva(
     data: {
       id_usuario: usuarioId,
       id_categoria: data.id_categoria,
-      id_estado_espera: ESTADO_EN_ESPERA,
+      id_estado_espera: estadoPendiente,
       articulo: data.articulo,
       monto_estimado: data.monto_estimado,
       motivo: data.motivo,
@@ -236,7 +242,7 @@ export async function actualizarCompraImpulsiva(
     where: {
       id_compra_impulsiva: id,
       id_usuario: usuarioId,
-      id_estado_espera: ESTADO_EN_ESPERA,
+      id_estado_espera: existente.id_estado_espera,
     },
     data: {
       id_categoria: data.id_categoria,
@@ -282,12 +288,14 @@ export async function comprarCompraImpulsiva(
   await validarMetodoPago(data.id_metodo_pago);
   await validarEmprendimiento(data.id_emprendimiento, usuarioId);
 
+  const estadoComprada = await buscarEstadoCompra(["Comprada"]);
   const resultado = await prisma.$transaction(async (tx) => {
     const compra = await tx.compra_impulsiva.findFirst({
       where: {
         id_compra_impulsiva: id,
         id_usuario: usuarioId,
       },
+      include: { estado_espera: true },
     });
 
     if (!compra) {
@@ -308,11 +316,11 @@ export async function comprarCompraImpulsiva(
       where: {
         id_compra_impulsiva: id,
         id_usuario: usuarioId,
-        id_estado_espera: ESTADO_EN_ESPERA,
+        id_estado_espera: compra.id_estado_espera,
         fecha_fin_espera: { lte: new Date() },
       },
       data: {
-        id_estado_espera: ESTADO_COMPRADA,
+        id_estado_espera: estadoComprada,
         fecha_resolucion: new Date(),
       },
     });
@@ -339,7 +347,7 @@ export async function comprarCompraImpulsiva(
     });
 
     const actualizada = await tx.compra_impulsiva.update({
-      where: { id_compra_impulsiva: id },
+      where: { id_compra_impulsiva: id, id_usuario: usuarioId },
       data: {
         id_movimiento: movimiento.id_movimiento,
       },
@@ -367,14 +375,15 @@ export async function descartarCompraImpulsiva(
   const compra = await obtenerCompraPropia(id, usuarioId);
   verificarEnEspera(compra);
 
+  const estadoDescartada = await buscarEstadoCompra(["Descartada"]);
   const resultado = await prisma.compra_impulsiva.updateMany({
     where: {
       id_compra_impulsiva: id,
       id_usuario: usuarioId,
-      id_estado_espera: ESTADO_EN_ESPERA,
+      id_estado_espera: compra.id_estado_espera,
     },
     data: {
-      id_estado_espera: ESTADO_DESCARTADA,
+      id_estado_espera: estadoDescartada,
       fecha_resolucion: new Date(),
     },
   });
@@ -426,7 +435,7 @@ export async function eliminarCompraImpulsiva(
   }
 
   await prisma.compra_impulsiva.delete({
-    where: { id_compra_impulsiva: id },
+    where: { id_compra_impulsiva: id, id_usuario: usuarioId },
   });
 
   return {

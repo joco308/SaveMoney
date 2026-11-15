@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import type { Prisma } from "../generated/prisma/client";
 import { ApiError } from "../types/api-error";
 
 function serializar<T>(data: T): T {
@@ -92,6 +93,7 @@ export async function obtenerAlerta(
 export async function marcarAlertaLeida(
   id: bigint,
   usuarioId: bigint,
+  leida = true,
 ) {
   const alerta = await prisma.alerta.findFirst({
     where: {
@@ -105,9 +107,9 @@ export async function marcarAlertaLeida(
   }
 
   const actualizada = await prisma.alerta.update({
-    where: { id_alerta: id },
+    where: { id_alerta: id, id_usuario: usuarioId },
     data: {
-      fecha_lectura: alerta.fecha_lectura ?? new Date(),
+      fecha_lectura: leida ? alerta.fecha_lectura ?? new Date() : null,
     },
     include: alertaInclude,
   });
@@ -148,7 +150,7 @@ export async function eliminarAlerta(
   }
 
   await prisma.alerta.delete({
-    where: { id_alerta: id },
+    where: { id_alerta: id, id_usuario: usuarioId },
   });
 
   return {
@@ -160,9 +162,6 @@ export async function eliminarAlerta(
  * Evalúa los presupuestos y límites de categoría después
  * de registrar o actualizar un movimiento.
  *
- * Tipos:
- * 1 = PRESUPUESTO_UMBRAL
- * 2 = LIMITE_CATEGORIA_UMBRAL
  */
 export async function evaluarAlertasPresupuesto(
   usuarioId: bigint,
@@ -192,6 +191,11 @@ export async function evaluarAlertasPresupuesto(
   });
 
   if (presupuestos.length === 0) return;
+
+  const [tipoPresupuesto, tipoLimite] = await Promise.all([
+    buscarTipoAlerta("PRESUPUESTO_UMBRAL", "PRESUPUESTO"),
+    buscarTipoAlerta("LIMITE_CATEGORIA_UMBRAL"),
+  ]);
 
   const movimientos = await prisma.movimiento.findMany({
     where: {
@@ -236,11 +240,11 @@ export async function evaluarAlertasPresupuesto(
       const porcentaje =
         (totalEgresos / montoPresupuesto) * 100;
 
-      if (porcentaje >= presupuesto.umbral_alerta_pct) {
+      if (tipoPresupuesto !== undefined && porcentaje >= presupuesto.umbral_alerta_pct) {
         const existente = await prisma.alerta.findFirst({
           where: {
             id_usuario: usuarioId,
-            id_tipo_alerta: 1,
+            id_tipo_alerta: tipoPresupuesto,
             id_presupuesto: presupuesto.id_presupuesto,
           },
         });
@@ -249,7 +253,7 @@ export async function evaluarAlertasPresupuesto(
           await prisma.alerta.create({
             data: {
               id_usuario: usuarioId,
-              id_tipo_alerta: 1,
+              id_tipo_alerta: tipoPresupuesto,
               id_presupuesto: presupuesto.id_presupuesto,
               mensaje:
                 `Has utilizado el ${porcentaje.toFixed(2)}% ` +
@@ -280,11 +284,11 @@ export async function evaluarAlertasPresupuesto(
       const porcentaje =
         (totalCategoria / montoLimite) * 100;
 
-      if (porcentaje >= limite.umbral_alerta_pct) {
+      if (tipoLimite !== undefined && porcentaje >= limite.umbral_alerta_pct) {
         const existente = await prisma.alerta.findFirst({
           where: {
             id_usuario: usuarioId,
-            id_tipo_alerta: 2,
+            id_tipo_alerta: tipoLimite,
             id_limite: limite.id_limite,
           },
         });
@@ -293,7 +297,7 @@ export async function evaluarAlertasPresupuesto(
           await prisma.alerta.create({
             data: {
               id_usuario: usuarioId,
-              id_tipo_alerta: 2,
+              id_tipo_alerta: tipoLimite,
               id_limite: limite.id_limite,
               mensaje:
                 `Has utilizado el ${porcentaje.toFixed(2)}% ` +
@@ -311,27 +315,30 @@ export async function evaluarAlertasPresupuesto(
 
 /**
  * Genera una única alerta cuando una meta se completa.
- * Tipo 3 = META_COMPLETADA.
  */
 export async function generarAlertaMetaCompletada(
   usuarioId: bigint,
   idMeta: bigint,
   nombreMeta: string,
+  db: Prisma.TransactionClient = prisma,
 ) {
-  const existente = await prisma.alerta.findFirst({
+  const tipoMeta = await buscarTipoAlerta("META_COMPLETADA", "META", db);
+  if (tipoMeta === undefined) return;
+
+  const existente = await db.alerta.findFirst({
     where: {
       id_usuario: usuarioId,
-      id_tipo_alerta: 3,
+      id_tipo_alerta: tipoMeta,
       id_meta: idMeta,
     },
   });
 
   if (existente) return;
 
-  await prisma.alerta.create({
+  await db.alerta.create({
     data: {
       id_usuario: usuarioId,
-      id_tipo_alerta: 3,
+      id_tipo_alerta: tipoMeta,
       id_meta: idMeta,
       mensaje: `¡Felicidades! Has completado tu meta de ahorro: ${nombreMeta}.`,
       fecha_generacion: new Date(),
@@ -342,15 +349,17 @@ export async function generarAlertaMetaCompletada(
 /**
  * Genera alertas para compras cuyo período de espera terminó.
  * Solo considera compras que siguen En espera.
- * Tipo 4 = COMPRA_ESPERA_FINALIZADA.
  */
 export async function evaluarAlertasComprasFinalizadas(
   usuarioId: bigint,
 ) {
+  const tipoCompra = await buscarTipoAlerta("COMPRA_ESPERA_FINALIZADA", "COMPRA_IMPULSIVA");
+  if (tipoCompra === undefined) return;
+
   const compras = await prisma.compra_impulsiva.findMany({
     where: {
       id_usuario: usuarioId,
-      id_estado_espera: 1,
+      estado_espera: { nombre: { in: ["En espera", "Pendiente"] } },
       fecha_fin_espera: { lte: new Date() },
     },
     select: {
@@ -363,7 +372,7 @@ export async function evaluarAlertasComprasFinalizadas(
     const existente = await prisma.alerta.findFirst({
       where: {
         id_usuario: usuarioId,
-        id_tipo_alerta: 4,
+        id_tipo_alerta: tipoCompra,
         id_compra_impulsiva: compra.id_compra_impulsiva,
       },
     });
@@ -372,7 +381,7 @@ export async function evaluarAlertasComprasFinalizadas(
       await prisma.alerta.create({
         data: {
           id_usuario: usuarioId,
-          id_tipo_alerta: 4,
+          id_tipo_alerta: tipoCompra,
           id_compra_impulsiva: compra.id_compra_impulsiva,
           mensaje: `Terminó el período de espera de tu compra: ${compra.articulo}. Ahora puedes decidir si deseas realizarla.`,
           fecha_generacion: new Date(),
@@ -380,4 +389,16 @@ export async function evaluarAlertasComprasFinalizadas(
       });
     }
   }
+}
+
+async function buscarTipoAlerta(
+  codigo: string,
+  codigoAnterior?: string,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const tipo = await db.tipo_alerta.findUnique({ where: { codigo } });
+  if (tipo || !codigoAnterior) return tipo?.id_tipo_alerta;
+
+  const anterior = await db.tipo_alerta.findUnique({ where: { codigo: codigoAnterior } });
+  return anterior?.id_tipo_alerta;
 }

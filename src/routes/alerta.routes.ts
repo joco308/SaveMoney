@@ -7,11 +7,13 @@ import { validate } from "../middlewares/validate.middleware";
 import {
   alertaIdSchema,
   listarAlertasSchema,
+  lecturaSchema,
 } from "../schemas/alerta.schema";
 import {
   listarAlertasController,
   obtenerAlertaController,
   marcarAlertaLeidaController,
+  cambiarLecturaController,
   marcarTodasLeidasController,
   eliminarAlertaController,
 } from "../controllers/alerta.controller";
@@ -41,6 +43,12 @@ alertaRouter.patch(
   "/:id/leer",
   validate({ params: alertaIdSchema }),
   marcarAlertaLeidaController,
+);
+
+alertaRouter.patch(
+  "/:id/lectura",
+  validate({ params: alertaIdSchema, body: lecturaSchema }),
+  cambiarLecturaController,
 );
 
 alertaRouter.delete(

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dineroSchema } from "./recurso.schema";
 
 const fechaSchema = z.string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "La fecha debe tener formato YYYY-MM-DD")
@@ -8,13 +9,7 @@ const fechaSchema = z.string()
       date.toISOString().slice(0, 10) === fecha;
   }, "La fecha no es válida");
 
-const montoSchema = z.number()
-  .finite()
-  .positive()
-  .max(999999999999.99)
-  .refine((monto) => Math.abs(monto * 100 - Math.round(monto * 100)) < 1e-8, {
-    message: "El monto debe tener como máximo dos decimales",
-  });
+const montoSchema = dineroSchema.transform(Number);
 
 export const metaAhorroIdSchema = z.object({
   id: z.coerce.bigint().positive(),
@@ -31,13 +26,15 @@ export const listarMetasAhorroSchema = z.object({
   id_estado_meta: z.coerce.number().int().positive().optional(),
 });
 
-export const crearMetaAhorroSchema = z.object({
+const camposMetaSchema = z.object({
   nombre: z.string().trim().min(1).max(100),
   descripcion: z.string().trim().max(300).nullable().optional(),
   monto_objetivo: montoSchema,
   fecha_inicio: fechaSchema,
   fecha_limite: fechaSchema,
-}).refine(
+});
+
+export const crearMetaAhorroSchema = camposMetaSchema.refine(
   (data) => data.fecha_limite >= data.fecha_inicio,
   {
     message: "La fecha límite debe ser igual o posterior a la fecha de inicio",
@@ -46,7 +43,7 @@ export const crearMetaAhorroSchema = z.object({
 );
 
 export const actualizarMetaAhorroSchema =
-  crearMetaAhorroSchema.partial().refine(
+  camposMetaSchema.partial().refine(
     (data) => Object.keys(data).length > 0,
     { message: "Debes enviar al menos un campo para actualizar" },
   );

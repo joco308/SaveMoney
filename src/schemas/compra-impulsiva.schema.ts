@@ -1,13 +1,7 @@
 import { z } from "zod";
+import { dineroSchema } from "./recurso.schema";
 
-const montoSchema = z.number()
-  .finite()
-  .positive("El monto debe ser mayor que cero")
-  .max(999999999999.99)
-  .refine(
-    (value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8,
-    "El monto admite como máximo dos decimales",
-  );
+const montoSchema = dineroSchema.transform(Number);
 
 export const compraImpulsivaIdSchema = z.object({
   id: z.coerce.bigint().positive(),

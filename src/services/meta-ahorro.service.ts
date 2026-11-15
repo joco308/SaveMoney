@@ -43,9 +43,9 @@ function fechaActualUTC(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function presentarMeta(meta: any) {
+function presentarMeta(meta: Prisma.meta_ahorroGetPayload<{ include: typeof metaInclude }>) {
   const totalCentavos = meta.aporte_meta.reduce(
-    (total: number, aporte: any) => total + aCentavos(aporte.monto),
+    (total, aporte) => total + aCentavos(aporte.monto),
     0,
   );
 
@@ -113,8 +113,8 @@ async function obtenerMetaBloqueada(
   return meta;
 }
 
-async function obtenerEstado(nombre: string) {
-  const estado = await prisma.estado_meta.findUnique({
+async function obtenerEstado(nombre: string, db: Prisma.TransactionClient = prisma) {
+  const estado = await db.estado_meta.findUnique({
     where: { nombre },
   });
 
@@ -128,10 +128,11 @@ async function obtenerEstado(nombre: string) {
 }
 
 async function actualizarEstadoAutomatico(
+  tx: Prisma.TransactionClient,
   idMeta: bigint,
   usuarioId: bigint,
 ) {
-  const meta = await prisma.meta_ahorro.findFirst({
+  const meta = await tx.meta_ahorro.findFirst({
     where: {
       id_meta: idMeta,
       id_usuario: usuarioId,
@@ -173,10 +174,13 @@ async function actualizarEstadoAutomatico(
   }
 
   if (meta.estado_meta.nombre !== nombreEstado) {
-    const estado = await obtenerEstado(nombreEstado);
+    const estado = nombreEstado === "Vencida"
+      ? await tx.estado_meta.findUnique({ where: { nombre: nombreEstado } })
+      : await obtenerEstado(nombreEstado, tx);
+    if (!estado) return;
 
-    await prisma.meta_ahorro.update({
-      where: { id_meta: idMeta },
+    await tx.meta_ahorro.update({
+      where: { id_meta: idMeta, id_usuario: usuarioId },
       data: { id_estado_meta: estado.id_estado_meta },
     });
 
@@ -185,6 +189,7 @@ async function actualizarEstadoAutomatico(
         usuarioId,
         idMeta,
         meta.nombre,
+        tx,
       );
     }
   }
@@ -262,25 +267,27 @@ export async function crearMetaAhorro(
     fecha_limite: string;
   },
 ) {
-  const estado = await obtenerEstado("Activa");
+  const idMeta = await prisma.$transaction(async (tx) => {
+    const estado = await obtenerEstado("Activa", tx);
+    const meta = await tx.meta_ahorro.create({
+      data: {
+        id_usuario: usuarioId,
+        id_estado_meta: estado.id_estado_meta,
+        nombre: data.nombre,
+        descripcion: data.descripcion ?? null,
+        monto_objetivo: desdeCentavos(aCentavos(data.monto_objetivo)),
+        fecha_inicio: fechaUTC(data.fecha_inicio),
+        fecha_limite: fechaUTC(data.fecha_limite),
+        fecha_creacion: new Date(),
+      },
+      include: metaInclude,
+    });
 
-  const meta = await prisma.meta_ahorro.create({
-    data: {
-      id_usuario: usuarioId,
-      id_estado_meta: estado.id_estado_meta,
-      nombre: data.nombre,
-      descripcion: data.descripcion ?? null,
-      monto_objetivo: desdeCentavos(aCentavos(data.monto_objetivo)),
-      fecha_inicio: fechaUTC(data.fecha_inicio),
-      fecha_limite: fechaUTC(data.fecha_limite),
-      fecha_creacion: new Date(),
-    },
-    include: metaInclude,
+    await actualizarEstadoAutomatico(tx, meta.id_meta, usuarioId);
+    return meta.id_meta;
   });
 
-  await actualizarEstadoAutomatico(meta.id_meta, usuarioId);
-
-  return obtenerMetaAhorro(meta.id_meta, usuarioId);
+  return obtenerMetaAhorro(idMeta, usuarioId);
 }
 
 export async function actualizarMetaAhorro(
@@ -294,59 +301,65 @@ export async function actualizarMetaAhorro(
     fecha_limite?: string;
   },
 ) {
-  const meta = await obtenerMetaPropia(id, usuarioId);
+  await prisma.$transaction(async (tx) => {
+    const meta = await obtenerMetaBloqueada(tx, id, usuarioId);
 
-  validarMetaEditable(meta.estado_meta.nombre);
+    validarMetaEditable(meta.estado_meta.nombre);
 
-  const fechaInicio = data.fecha_inicio
-    ? fechaUTC(data.fecha_inicio)
-    : meta.fecha_inicio;
+    const fechaInicio = data.fecha_inicio
+      ? fechaUTC(data.fecha_inicio)
+      : meta.fecha_inicio;
 
-  const fechaLimite = data.fecha_limite
-    ? fechaUTC(data.fecha_limite)
-    : meta.fecha_limite;
+    const fechaLimite = data.fecha_limite
+      ? fechaUTC(data.fecha_limite)
+      : meta.fecha_limite;
 
-  if (fechaLimite < fechaInicio) {
-    throw ApiError.badRequest(
-      "La fecha límite debe ser igual o posterior a la fecha de inicio",
+    if (fechaLimite < fechaInicio) {
+      throw ApiError.badRequest(
+        "La fecha límite debe ser igual o posterior a la fecha de inicio",
+      );
+    }
+
+    if (meta.aporte_meta.some((aporte) => aporte.fecha_aporte < fechaInicio || aporte.fecha_aporte > fechaLimite)) {
+      throw ApiError.badRequest("El período debe incluir los aportes existentes");
+    }
+
+    const totalCentavos = meta.aporte_meta.reduce(
+      (total, aporte) => total + aCentavos(aporte.monto),
+      0,
     );
-  }
 
-  const totalCentavos = meta.aporte_meta.reduce(
-    (total, aporte) => total + aCentavos(aporte.monto),
-    0,
-  );
+    const nuevoObjetivo = data.monto_objetivo !== undefined
+      ? aCentavos(data.monto_objetivo)
+      : aCentavos(meta.monto_objetivo);
 
-  const nuevoObjetivo = data.monto_objetivo !== undefined
-    ? aCentavos(data.monto_objetivo)
-    : aCentavos(meta.monto_objetivo);
+    if (nuevoObjetivo < totalCentavos) {
+      throw ApiError.badRequest(
+        "El objetivo no puede ser menor al total de los aportes registrados",
+      );
+    }
 
-  if (nuevoObjetivo < totalCentavos) {
-    throw ApiError.badRequest(
-      "El objetivo no puede ser menor al total de los aportes registrados",
-    );
-  }
+    await tx.meta_ahorro.update({
+      where: { id_meta: id, id_usuario: usuarioId },
+      data: {
+        ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
+        ...(data.descripcion !== undefined
+          ? { descripcion: data.descripcion }
+          : {}),
+        ...(data.monto_objetivo !== undefined
+          ? { monto_objetivo: desdeCentavos(nuevoObjetivo) }
+          : {}),
+        ...(data.fecha_inicio !== undefined
+          ? { fecha_inicio: fechaInicio }
+          : {}),
+        ...(data.fecha_limite !== undefined
+          ? { fecha_limite: fechaLimite }
+          : {}),
+      },
+    });
 
-  await prisma.meta_ahorro.update({
-    where: { id_meta: id },
-    data: {
-      ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-      ...(data.descripcion !== undefined
-        ? { descripcion: data.descripcion }
-        : {}),
-      ...(data.monto_objetivo !== undefined
-        ? { monto_objetivo: desdeCentavos(nuevoObjetivo) }
-        : {}),
-      ...(data.fecha_inicio !== undefined
-        ? { fecha_inicio: fechaInicio }
-        : {}),
-      ...(data.fecha_limite !== undefined
-        ? { fecha_limite: fechaLimite }
-        : {}),
-    },
+    await actualizarEstadoAutomatico(tx, id, usuarioId);
   });
-
-  await actualizarEstadoAutomatico(id, usuarioId);
 
   return obtenerMetaAhorro(id, usuarioId);
 }
@@ -377,7 +390,7 @@ export async function eliminarMetaAhorro(
   }
 
   await prisma.meta_ahorro.delete({
-    where: { id_meta: id },
+    where: { id_meta: id, id_usuario: usuarioId },
   });
 
   return { mensaje: "Meta de ahorro eliminada correctamente" };
@@ -387,23 +400,25 @@ export async function cancelarMetaAhorro(
   id: bigint,
   usuarioId: bigint,
 ) {
-  const meta = await obtenerMetaPropia(id, usuarioId);
+  await prisma.$transaction(async (tx) => {
+    const meta = await obtenerMetaBloqueada(tx, id, usuarioId);
 
-  if (meta.estado_meta.nombre === "Completada") {
-    throw ApiError.conflict(
-      "No se puede cancelar una meta completada",
-    );
-  }
+    if (meta.estado_meta.nombre === "Completada") {
+      throw ApiError.conflict(
+        "No se puede cancelar una meta completada",
+      );
+    }
 
-  if (meta.estado_meta.nombre === "Cancelada") {
-    throw ApiError.conflict("La meta ya está cancelada");
-  }
+    if (meta.estado_meta.nombre === "Cancelada") {
+      throw ApiError.conflict("La meta ya está cancelada");
+    }
 
-  const estado = await obtenerEstado("Cancelada");
+    const estado = await obtenerEstado("Cancelada", tx);
 
-  await prisma.meta_ahorro.update({
-    where: { id_meta: id },
-    data: { id_estado_meta: estado.id_estado_meta },
+    await tx.meta_ahorro.update({
+      where: { id_meta: id, id_usuario: usuarioId },
+      data: { id_estado_meta: estado.id_estado_meta },
+    });
   });
 
   return obtenerMetaAhorro(id, usuarioId);
@@ -434,6 +449,12 @@ export async function listarAportesMeta(
 }
 
 
+function validarFechaAporte(fecha: Date, meta: { fecha_inicio: Date; fecha_limite: Date }) {
+  if (fecha < meta.fecha_inicio || fecha > meta.fecha_limite) {
+    throw ApiError.badRequest("La fecha del aporte debe estar dentro del período de la meta");
+  }
+}
+
 export async function crearAporteMeta(
   id: bigint,
   usuarioId: bigint,
@@ -463,17 +484,20 @@ export async function crearAporteMeta(
       );
     }
 
-    return tx.aporte_meta.create({
+    const fecha = fechaUTC(data.fecha_aporte);
+    validarFechaAporte(fecha, meta);
+
+    const creado = await tx.aporte_meta.create({
       data: {
         id_meta: id,
         monto: desdeCentavos(nuevoMontoCentavos),
-        fecha_aporte: fechaUTC(data.fecha_aporte),
+        fecha_aporte: fecha,
         nota: data.nota ?? null,
       },
     });
+    await actualizarEstadoAutomatico(tx, id, usuarioId);
+    return creado;
   });
-
-  await actualizarEstadoAutomatico(id, usuarioId);
 
   return serializar(aporte);
 }
@@ -498,6 +522,7 @@ export async function actualizarAporteMeta(
       where: {
         id_aporte: idAporte,
         id_meta: id,
+        meta_ahorro: { id_usuario: usuarioId },
       },
     });
 
@@ -521,21 +546,24 @@ export async function actualizarAporteMeta(
       );
     }
 
-    return tx.aporte_meta.update({
-      where: { id_aporte: idAporte },
+    const fecha = data.fecha_aporte === undefined ? undefined : fechaUTC(data.fecha_aporte);
+    if (fecha) validarFechaAporte(fecha, meta);
+
+    const resultado = await tx.aporte_meta.update({
+      where: { id_aporte: idAporte, id_meta: id, meta_ahorro: { id_usuario: usuarioId } },
       data: {
         ...(data.monto !== undefined
           ? { monto: desdeCentavos(nuevoMonto) }
           : {}),
         ...(data.fecha_aporte !== undefined
-          ? { fecha_aporte: fechaUTC(data.fecha_aporte) }
+          ? { fecha_aporte: fecha }
           : {}),
         ...(data.nota !== undefined ? { nota: data.nota } : {}),
       },
     });
+    await actualizarEstadoAutomatico(tx, id, usuarioId);
+    return resultado;
   });
-
-  await actualizarEstadoAutomatico(id, usuarioId);
 
   return serializar(actualizado);
 }
@@ -555,6 +583,7 @@ export async function eliminarAporteMeta(
       where: {
         id_aporte: idAporte,
         id_meta: id,
+        meta_ahorro: { id_usuario: usuarioId },
       },
     });
 
@@ -563,11 +592,18 @@ export async function eliminarAporteMeta(
     }
 
     await tx.aporte_meta.delete({
-      where: { id_aporte: idAporte },
+      where: { id_aporte: idAporte, id_meta: id, meta_ahorro: { id_usuario: usuarioId } },
     });
+    await actualizarEstadoAutomatico(tx, id, usuarioId);
   });
 
-  await actualizarEstadoAutomatico(id, usuarioId);
-
   return { mensaje: "Aporte eliminado correctamente" };
+}
+
+export async function obtenerAporteMeta(idMeta: bigint, idAporte: bigint, usuarioId: bigint) {
+  const aporte = await prisma.aporte_meta.findFirst({
+    where: { id_aporte: idAporte, id_meta: idMeta, meta_ahorro: { id_usuario: usuarioId } },
+  });
+  if (!aporte) throw ApiError.notFound("Aporte no encontrado");
+  return serializar(aporte);
 }
