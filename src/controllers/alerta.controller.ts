@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/async-handler";
 import {
   alertaIdSchema,
+  lecturaSchema,
   listarAlertasSchema,
 } from "../schemas/alerta.schema";
 import * as alertaService from "../services/alerta.service";
@@ -82,3 +83,10 @@ export const eliminarAlertaController = asyncHandler(
     });
   },
 );
+
+export const cambiarLecturaController = asyncHandler(async (req, res) => {
+  const { id } = alertaIdSchema.parse(req.validated?.params);
+  const { leida } = lecturaSchema.parse(req.validated?.body);
+  const alerta = await alertaService.marcarAlertaLeida(id, req.usuario!.id_usuario, leida);
+  res.json({ success: true, data: alerta });
+});

@@ -10,8 +10,7 @@
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma skills sync || exit 0"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -24,12 +23,12 @@
     "@types/node": "^24.0.0",
     "@types/pg": "^8.16.0",
     "prisma": "^7.10.1",
-    "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "@supabase/supabase-js": "^2.119.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^18.0.9",
@@ -37,6 +36,7 @@
     "helmet": "^8.1.0",
     "jose": "^6.0.0",
     "pg": "^8.23.1",
+    "tsx": "^4.20.0",
     "zod": "^4.0.0"
   },
   "allowScripts": {

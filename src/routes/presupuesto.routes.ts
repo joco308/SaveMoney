@@ -3,6 +3,7 @@ import {
   requireAuth,
   requireUsuario,
 } from "../middlewares/auth.middleware";
+import { paginacionSchema } from "../schemas/recurso.schema";
 import { validate } from "../middlewares/validate.middleware";
 import {
   presupuestoIdSchema,
@@ -15,6 +16,8 @@ import {
 } from "../schemas/presupuesto.schema";
 import {
   listarPresupuestosController,
+  listarLimitesController,
+  obtenerLimiteController,
   obtenerPresupuestoController,
   crearPresupuestoController,
   actualizarPresupuestoController,
@@ -62,7 +65,7 @@ presupuestoRouter.delete(
 );
 
 presupuestoRouter.post(
-  "/:id/categorias",
+  ["/:id/categorias", "/:id/limites"],
   validate({
     params: presupuestoIdSchema,
     body: crearPresupuestoCategoriaSchema,
@@ -71,7 +74,7 @@ presupuestoRouter.post(
 );
 
 presupuestoRouter.put(
-  "/:id/categorias/:idLimite",
+  ["/:id/categorias/:idLimite", "/:id/limites/:idLimite"],
   validate({
     params: presupuestoCategoriaParamsSchema,
     body: actualizarPresupuestoCategoriaSchema,
@@ -80,7 +83,19 @@ presupuestoRouter.put(
 );
 
 presupuestoRouter.delete(
-  "/:id/categorias/:idLimite",
+  ["/:id/categorias/:idLimite", "/:id/limites/:idLimite"],
   validate({ params: presupuestoCategoriaParamsSchema }),
   eliminarLimiteCategoriaController,
+);
+
+presupuestoRouter.get(
+  ["/:id/categorias", "/:id/limites"],
+  validate({ params: presupuestoIdSchema, query: paginacionSchema }),
+  listarLimitesController,
+);
+
+presupuestoRouter.get(
+  ["/:id/categorias/:idLimite", "/:id/limites/:idLimite"],
+  validate({ params: presupuestoCategoriaParamsSchema }),
+  obtenerLimiteController,
 );

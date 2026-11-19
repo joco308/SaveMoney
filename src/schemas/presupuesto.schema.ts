@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dineroSchema } from "./recurso.schema";
 
 export const presupuestoIdSchema = z.object({
   id: z.coerce.bigint().positive(),
@@ -21,13 +22,7 @@ export const crearPresupuestoSchema = z.object({
   id_emprendimiento: z.coerce.bigint().positive().nullable().optional(),
   anio: z.number().int().min(2000).max(2100),
   mes: z.number().int().min(1).max(12),
-  monto_total: z.number()
-    .positive()
-    .max(999999999999.99)
-    .refine(
-      (value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8,
-      "El monto admite como máximo dos decimales",
-    ),
+  monto_total: dineroSchema.transform(Number),
   umbral_alerta_pct: z.number().int().min(1).max(100),
 });
 
@@ -40,18 +35,13 @@ export const actualizarPresupuestoSchema =
 
 export const crearPresupuestoCategoriaSchema = z.object({
   id_categoria: z.number().int().positive(),
-  monto_limite: z.number()
-    .positive()
-    .max(999999999999.99)
-    .refine(
-      (value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8,
-      "El monto admite como máximo dos decimales",
-    ),
+  monto_limite: dineroSchema.transform(Number),
   umbral_alerta_pct: z.number().int().min(1).max(100),
 });
 
 export const actualizarPresupuestoCategoriaSchema = z.object({
-  monto_limite: z.number().positive().max(999999999999.99).optional(),
+  id_categoria: z.number().int().positive().max(2147483647).optional(),
+  monto_limite: dineroSchema.transform(Number).optional(),
   umbral_alerta_pct: z.number().int().min(1).max(100).optional(),
 }).refine((data) => Object.keys(data).length > 0, {
   message: "Debes enviar al menos un campo para actualizar",
