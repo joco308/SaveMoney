@@ -9,6 +9,7 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import { Acceso } from './src/components/Acceso';
 import Navigation from './src/navigation';
 import { Loading } from './src/components/ui';
 
@@ -24,7 +25,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Navigation />
+      <Acceso><Navigation /></Acceso>
     </SafeAreaProvider>
   );
 }

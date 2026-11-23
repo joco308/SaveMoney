@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Chip, Ic, IconBox, Loading, Segmented, Txt } from '../components/ui';
-import { api } from '../services/api';
+import { Button, Chip, Ic, IconBox, Segmented, Txt } from '../components/ui';
+import { api, fechaLocal } from '../services/api';
+import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors } from '../theme';
 import { Ambito, Frecuencia, TipoMov } from '../types/db';
@@ -13,14 +14,24 @@ const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫'];
 export default function RegistroRapidoScreen() {
   const nav = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const cats = useApi(api.getCategorias);
+  const { data: catalogo, error, reload } = useApi(api.getCategorias);
+  const { data: empresas, error: errorEmpresas, reload: cargarEmpresas } = useApi(api.getEmprendimientos);
+  const { data: metodos, error: errorMetodos, reload: cargarMetodos } = useApi(api.getMetodos);
   const [tipo, setTipo] = useState<TipoMov>('Gasto');
   const [ambito, setAmbito] = useState<Ambito>('Personal');
+  const [empresa, setEmpresa] = useState<number>();
+  const [fallo, setFallo] = useState('');
   const [frec, setFrec] = useState<Frecuencia>('Variable');
-  const [txt, setTxt] = useState('35');
-  const [cat, setCat] = useState(1);
+  const [txt, setTxt] = useState('');
+  const [cat, setCat] = useState<number>();
+  const [saving, setSaving] = useState(false);
   const [impulsivo, setImpulsivo] = useState(false);
-  if (!cats) return <Loading />;
+  if (!catalogo || !empresas || !metodos) {
+    return <EstadoConsulta error={error || errorEmpresas || errorMetodos} reload={() => {
+      reload(); cargarEmpresas(); cargarMetodos();
+    }} />;
+  }
+  const cats = catalogo.filter((c) => c.activa && c.tipo === tipo);
 
   const press = (k: string) => {
     if (k === '⌫') return setTxt((t) => t.slice(0, -1));
@@ -28,16 +39,25 @@ export default function RegistroRapidoScreen() {
     if (txt.length >= 9) return;
     setTxt((t) => t + k);
   };
-  const valor = parseFloat(txt.replace(',', '.')) || 0;
+  const valor = Number(txt.replace(',', '.')) || 0;
   const fmt = valor.toFixed(2).replace('.', ',');
 
   const guardar = async () => {
-    if (valor <= 0) return;
-    await api.createMovimiento({
-      tipo, monto: valor, ambito, frecuencia: frec, id_categoria: cat, metodoPago: 'Efectivo',
-      fecha: new Date().toISOString().slice(0, 10), impulsivo,
-    });
-    nav.goBack();
+    if (saving) return;
+    setSaving(true);
+    setFallo('');
+    try {
+      await api.createMovimiento({
+        tipo, monto: valor, ambito, frecuencia: frec, id_categoria: cat,
+        id_metodo_pago: metodos.find((p) => p.nombre === 'Efectivo')?.id_metodo_pago, id_emprendimiento: empresa,
+        fecha: fechaLocal(), impulsivo: tipo === 'Gasto' && impulsivo,
+      });
+      nav.goBack();
+    } catch (e) {
+      setFallo(e instanceof Error ? e.message : 'No se pudo guardar el movimiento.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -53,7 +73,7 @@ export default function RegistroRapidoScreen() {
 
         <View style={{ flexDirection: 'row', backgroundColor: colors.blueSoft, borderRadius: 16, padding: 4 }}>
           {(['Gasto', 'Ingreso'] as const).map((t) => (
-            <TouchableOpacity key={t} onPress={() => setTipo(t)} style={{ flex: 1, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', paddingVertical: 11, borderRadius: 12, backgroundColor: tipo === t ? '#fff' : 'transparent' }}>
+            <TouchableOpacity key={t} onPress={() => { setTipo(t); setCat(undefined); }} style={{ flex: 1, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', paddingVertical: 11, borderRadius: 12, backgroundColor: tipo === t ? '#fff' : 'transparent' }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t === 'Gasto' ? colors.red : colors.primary }} />
               <Txt w="b" size={14} color={tipo === t ? colors.text : colors.textSoft}>Registrar {t}</Txt>
             </TouchableOpacity>
@@ -71,19 +91,29 @@ export default function RegistroRapidoScreen() {
           </View>
         </View>
 
+        {ambito === 'Negocio' && (
+          <View style={{ gap: 8 }}>
+            <Txt w="b">Emprendimiento</Txt>
+            {empresas.length === 0 && <Txt>No tienes emprendimientos activos.</Txt>}
+            {empresas.map((e) => (
+              <TouchableOpacity key={e.id_emprendimiento} onPress={() => setEmpresa(e.id_emprendimiento)}>
+                <Chip label={e.nombre} bg={empresa === e.id_emprendimiento ? colors.mint : colors.blueSoft} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
         <View style={{ backgroundColor: colors.blueSofter, borderRadius: 20, padding: 16, alignItems: 'center', gap: 4 }}>
           <Txt w="xb" size={40}>
             <Txt w="b" size={22} color={colors.textSoft}>Bs </Txt>{txt || '0'}<Txt w="r" size={40} color={colors.primary}>|</Txt>
           </Txt>
-          <Txt w="sb" size={12} color={colors.primary}>✦ Sugerencia: Almuerzo rápido en cafetería</Txt>
         </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Txt w="b" size={14}>Categoría</Txt>
-          <Txt w="b" size={12} color={colors.primary}>Ver todas</Txt>
+
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-          {cats.slice(0, 6).map((c) => {
+          {cats.map((c) => {
             const on = cat === c.id_categoria;
             return (
               <TouchableOpacity key={c.id_categoria} onPress={() => setCat(c.id_categoria)} style={{ alignItems: 'center', gap: 6 }}>
@@ -116,7 +146,8 @@ export default function RegistroRapidoScreen() {
           ))}
         </View>
 
-        <Button icon="check-circle" label="Guardar en 1 paso" onPress={guardar} />
+        {!!fallo && <Txt color={colors.red}>{fallo}</Txt>}
+        <Button icon="check-circle" label={saving ? "Guardando…" : "Guardar en 1 paso"} onPress={guardar} />
         <Txt w="b" size={12} color={colors.textSoft} style={{ textAlign: 'center' }}>Bs {fmt}</Txt>
       </ScrollView>
     </View>

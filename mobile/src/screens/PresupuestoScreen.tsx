@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AppHeader, Bar, Card, Chip, Ic, IconBox, Loading, Screen, Txt } from '../components/ui';
+import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt } from '../components/ui';
 import { api } from '../services/api';
+import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors, money } from '../theme';
 
@@ -15,13 +16,12 @@ export const estadoCat = (pct: number) => {
 
 export default function PresupuestoScreen() {
   const nav = useNavigation<any>();
-  const d = useApi(() => api.getPresupuesto());
-  const [umbrales, setUmbrales] = useState<{ pct: number; activo: boolean }[] | null>(null);
-  if (!d) return <Loading />;
-  const u = umbrales ?? d.umbrales;
-  const pctTotal = Math.round((d.gastado / d.total) * 100);
+  const { data: d, error, reload } = useApi(api.getPresupuesto);
+  if (!d) return <EstadoConsulta error={error} reload={reload} />;
+  const u = d.umbrales;
+  const pctTotal = d.total > 0 ? Math.round((d.gastado / d.total) * 100) : 0;
   const disponible = d.total - d.gastado;
-  const cats = d.categorias.map((c) => ({ ...c, pct: Math.round((c.gastado / c.limite) * 100) }));
+  const cats = d.categorias.map((c) => ({ ...c, pct: c.limite > 0 ? Math.round((c.gastado / c.limite) * 100) : 0 }));
   const avisos = cats.filter((c) => c.pct >= 80 || c.pct > 100 || true).slice(0, 3);
 
   return (
@@ -130,21 +130,20 @@ export default function PresupuestoScreen() {
       </TouchableOpacity>
 
       <Card style={{ gap: 12 }}>
-        <Txt w="xb" size={15}>⚙ Ajustes de alertas de gastos</Txt>
-        <Txt w="m" size={12} color={colors.textSoft}>Notificarme automáticamente al alcanzar:</Txt>
+        <Txt w="xb" size={15}>Umbral de alerta</Txt>
+        <Txt w="m" size={12} color={colors.textSoft}>Porcentaje configurado en el presupuesto</Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {u.map((x, i) => (
-            <TouchableOpacity
+          {u.map((x) => (
+            <View
               key={x.pct}
-              onPress={() => setUmbrales(u.map((y, j) => (j === i ? { ...y, activo: !y.activo } : y)))}
               style={{ width: '47%', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, padding: 14, backgroundColor: x.activo ? colors.primary : colors.blueSofter }}
             >
               <Ic name={x.activo ? 'check-circle-outline' : 'circle-outline'} size={18} color={x.activo ? '#fff' : colors.textSoft} />
               <Txt w="b" size={13} color={x.activo ? '#fff' : colors.textSoft}>Al {x.pct}% <Txt w="sb" size={11} color={x.activo ? colors.mint : colors.textSoft}>{x.activo ? 'Activo' : 'Off'}</Txt></Txt>
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
-        <Txt w="m" size={11} color={colors.textSoft}>✓ Alertas automáticas vía notificaciones push activas.</Txt>
+        {u.length === 0 && <Txt>No hay un presupuesto personal para este mes.</Txt>}
       </Card>
     </Screen>
   );

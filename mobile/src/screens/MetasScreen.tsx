@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Switch, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { AppHeader, Bar, Button, Card, Chip, Ic, IconBox, Loading, Screen, Txt } from '../components/ui';
+import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt } from '../components/ui';
 import { api } from '../services/api';
+import { RecordatorioAhorro } from '../components/RecordatorioAhorro';
+import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors, money } from '../theme';
 
@@ -22,11 +24,10 @@ const Ring = ({ pct, size = 52 }: { pct: number; size?: number }) => {
 };
 
 export default function MetasScreen() {
-  const d = useApi(api.getMetas);
-  const [rec, setRec] = useState<boolean[]>([true, false]);
-  if (!d) return <Loading />;
-  const pctG = Math.round((d.totalAcumulado / d.objetivoGlobal) * 100);
-  const maxV = Math.max(...d.proyeccion.map((p) => p.valor));
+  const { data: d, error, reload } = useApi(api.getMetas);
+  if (!d) return <EstadoConsulta error={error} reload={reload} />;
+  const pctG = d.objetivoGlobal > 0 ? Math.round((d.totalAcumulado / d.objetivoGlobal) * 100) : 0;
+  const maxV = Math.max(1, ...d.proyeccion.map((p) => p.valor));
 
   return (
     <Screen>
@@ -36,10 +37,6 @@ export default function MetasScreen() {
           <Txt w="b" size={11} color={colors.primary}>TUS PROYECTOS</Txt>
           <Txt w="xb" size={24}>Mis Metas de Ahorro</Txt>
         </View>
-        <TouchableOpacity style={{ flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: colors.primary, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 }}>
-          <Ic name="plus-circle-outline" size={16} color="#fff" />
-          <Txt w="b" size={12} color="#fff">Nueva meta</Txt>
-        </TouchableOpacity>
       </View>
 
       <Card style={{ gap: 12 }}>
@@ -75,7 +72,7 @@ export default function MetasScreen() {
         <Chip label={`${d.metas.length} en progreso`} />
       </View>
       {d.metas.map((m) => {
-        const pct = Math.round((m.ahorrado / m.objetivo) * 100);
+        const pct = m.objetivo > 0 ? Math.round((m.ahorrado / m.objetivo) * 100) : 0;
         return (
           <Card key={m.id_meta} style={{ gap: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -96,18 +93,7 @@ export default function MetasScreen() {
                 <Txt w="b" size={13} color={colors.primary}>✓ ¡Vas por buen camino!</Txt>
                 <Txt w="m" size={12} color={colors.textSoft}>{m.sugerencia}</Txt>
               </View>
-            ) : (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.blueSofter, borderRadius: 16, padding: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                  <Ic name="autorenew" size={18} color={colors.primary} />
-                  <View>
-                    <Txt w="sb" size={10} color={colors.textSoft}>Aporte programado</Txt>
-                    <Txt w="b" size={13}>{m.programado}</Txt>
-                  </View>
-                </View>
-                <Chip label={m.debito ?? ''} bg="#fff" color={colors.text} w="sb" />
-              </View>
-            )}
+            ) : null}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Txt w="b" size={12} color={colors.textSoft}>{m.recordatorio}</Txt>
               <Txt w="b" size={12} color={colors.primary}>Aportar →</Txt>
@@ -117,8 +103,8 @@ export default function MetasScreen() {
       })}
 
       <Card style={{ gap: 12 }}>
-        <Txt w="xb" size={18}>Proyección y Crecimiento</Txt>
-        <Txt w="m" size={12} color={colors.textSoft}>Estimación según tu ritmo actual</Txt>
+        <Txt w="xb" size={18}>Historial de aportes</Txt>
+        <Txt w="m" size={12} color={colors.textSoft}>Aportes registrados por mes</Txt>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 130, backgroundColor: colors.blueSofter, borderRadius: 16, padding: 12 }}>
           {d.proyeccion.map((p, i) => {
             const last = i === d.proyeccion.length - 1;
@@ -136,41 +122,8 @@ export default function MetasScreen() {
             <Txt key={p.label} w="sb" size={9} color={colors.textSoft} style={{ flex: 1, textAlign: 'center' }}>{p.label}</Txt>
           ))}
         </View>
-        <View style={{ backgroundColor: colors.mintSoft, borderRadius: 16, padding: 12 }}>
-          <Txt w="m" size={12}>Manteniendo un ahorro de <Txt w="b" size={12}>Bs 800/mes</Txt>, completarás todas tus metas en <Txt w="b" size={12}>9 semanas antes</Txt> de lo previsto.</Txt>
-        </View>
       </Card>
-
-      <Card style={{ gap: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Txt w="xb" size={17}>🔔 Recordatorios Automáticos</Txt>
-          <Chip label="1 Activo" bg={colors.blueSoft} color={colors.textSoft} />
-        </View>
-        {[
-          { t: 'Ahorro semanal para Celular', s: 'Bs 100 cada Lunes a las 09:00 AM', i: 'cellphone' },
-          { t: 'Refuerzo fin de mes Viaje', s: 'Recordatorio de depósito voluntario', i: 'airplane' },
-        ].map((r, i) => (
-          <View key={r.t} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.blueSofter, borderRadius: 16, padding: 12 }}>
-            <IconBox icon={r.i} size={36} bg="#fff" />
-            <View style={{ flex: 1 }}>
-              <Txt w="b" size={13}>{r.t}</Txt>
-              <Txt w="m" size={11} color={colors.textSoft}>{r.s}</Txt>
-            </View>
-            <Switch value={rec[i]} onValueChange={(v) => setRec(rec.map((x, j) => (j === i ? v : x)))} trackColor={{ true: colors.primary, false: colors.gray }} thumbColor="#fff" />
-          </View>
-        ))}
-        <TouchableOpacity style={{ backgroundColor: colors.mintSoft, borderRadius: 16, padding: 14, alignItems: 'center' }}>
-          <Txt w="b" size={13} color={colors.primary}>+ Crear recordatorio</Txt>
-        </TouchableOpacity>
-      </Card>
-
-      <Card style={{ backgroundColor: colors.blueSoft, flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-        <IconBox icon="medal-outline" size={48} bg={colors.mint} round={24} />
-        <View style={{ flex: 1 }}>
-          <Txt w="xb" size={14}>¡Racha de Ahorro: {d.racha} semanas!</Txt>
-          <Txt w="m" size={12} color={colors.textSoft}>Completaste tus aportes a tiempo. Has desbloqueado la insignia 'Ahorrista Disciplinado'.</Txt>
-        </View>
-      </Card>
+      <RecordatorioAhorro />
     </Screen>
   );
 }

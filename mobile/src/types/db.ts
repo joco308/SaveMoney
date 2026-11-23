@@ -1,5 +1,4 @@
-// Tipos alineados con prisma/schema.prisma (Supabase / PostgreSQL).
-// BigInt y Decimal llegan como number desde supabase-js.
+// Tipos del esquema público de PostgreSQL y modelos para las pantallas.
 
 export interface Usuario {
   id_usuario: number;
@@ -108,7 +107,6 @@ export interface Alerta {
 export type Ambito = 'Personal' | 'Negocio';
 export type Frecuencia = 'Fijo' | 'Variable';
 export type TipoMov = 'Gasto' | 'Ingreso';
-export type MetodoPago = 'Efectivo' | 'Tarjeta' | 'QR Bancario';
 
 export interface MovimientoVista {
   id: number;
@@ -132,7 +130,8 @@ export interface NuevoMovimiento {
   ambito: Ambito;
   frecuencia: Frecuencia;
   id_categoria?: number;
-  metodoPago: MetodoPago;
+  id_metodo_pago?: number;
+  id_emprendimiento?: number;
   fecha: string;
   nota?: string;
   impulsivo?: boolean;

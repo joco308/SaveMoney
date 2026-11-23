@@ -33,10 +33,14 @@
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^18.0.9",
+    "expo": "^57.0.33",
+    "expo-notifications": "~57.0.25",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jose": "^6.0.0",
     "pg": "^8.23.1",
+    "react-dom": "19.2.3",
+    "react-native-web": "^0.21.2",
     "zod": "^4.0.0"
   },
   "allowScripts": {

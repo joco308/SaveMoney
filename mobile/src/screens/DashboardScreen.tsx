@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { AppHeader, Card, Chip, Ic, IconBox, Loading, Screen, SectionTitle, Txt } from '../components/ui';
+import { AppHeader, Card, Chip, Ic, IconBox, Screen, SectionTitle, Txt } from '../components/ui';
 import { api } from '../services/api';
+import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors, money } from '../theme';
 import { MovimientoVista } from '../types/db';
@@ -29,11 +30,11 @@ export const MovimientoRow = ({ m }: { m: MovimientoVista }) => {
 
 export default function DashboardScreen() {
   const nav = useNavigation<any>();
-  const d = useApi(api.getDashboard);
+  const { data: d, error, reload } = useApi(api.getDashboard);
   const [visible, setVisible] = useState(true);
-  if (!d) return <Loading />;
+  if (!d) return <EstadoConsulta error={error} reload={reload} />;
   const hide = (n: number) => (visible ? money(n, 2) : 'Bs ••••');
-  const gastadoPct = Math.round((d.gastos / d.limiteMensual) * 100);
+  const gastadoPct = d.limiteMensual > 0 ? Math.round((d.gastos / d.limiteMensual) * 100) : 0;
 
   return (
     <Screen>
@@ -55,7 +56,7 @@ export default function DashboardScreen() {
           <Chip label="En regla" bg="rgba(255,255,255,0.15)" color={colors.mint} />
         </View>
         <Txt w="xb" size={36} color="#fff" style={{ marginVertical: 10 }}>
-          {hide(d.disponible)} <Txt w="m" size={12} color={colors.mint}>BOB</Txt>
+          {hide(d.disponible)} <Txt w="m" size={12} color={colors.mint}>{d.moneda}</Txt>
         </Txt>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {[

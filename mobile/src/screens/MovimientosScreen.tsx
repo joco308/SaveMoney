@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { AppHeader, Card, Chip, Ic, IconBox, Loading, Screen, SectionTitle, Txt, Bar } from '../components/ui';
+import { AppHeader, Card, Chip, Ic, IconBox, Screen, SectionTitle, Txt, Bar } from '../components/ui';
 import { api } from '../services/api';
+import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors, money } from '../theme';
 
 export default function MovimientosScreen() {
-  const d = useApi(() => api.getNegocio('Todos'));
-  const [tab, setTab] = useState<'Todos' | 'Personal' | 'Negocio'>('Negocio');
-  if (!d) return <Loading />;
+  const [tab, setTab] = useState<'Todos' | 'Personal' | 'Negocio'>('Todos');
+  const consultar = useCallback(() => api.getNegocio(tab), [tab]);
+  const { data: d, error, reload } = useApi(consultar);
+  if (!d) return <EstadoConsulta error={error} reload={reload} />;
   const total = d.personal + d.negocio;
-  const fijoPct = Math.round((d.fijos / (d.fijos + d.variables)) * 100);
+  const fijoPct = Math.round((d.fijos / Math.max(1, d.fijos + d.variables)) * 100);
 
   return (
     <Screen>
@@ -35,16 +37,16 @@ export default function MovimientosScreen() {
         <Card style={{ flex: 1, gap: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <IconBox icon="account-outline" size={36} />
-            <Chip label={`${Math.round((d.personal / total) * 100)}%`} bg={colors.blueSoft} />
+            <Chip label={`${Math.round((d.personal / Math.max(1, total)) * 100)}%`} bg={colors.blueSoft} />
           </View>
           <Txt w="m" size={12} color={colors.textSoft}>Gastos personales</Txt>
           <Txt w="b" size={20}>{money(d.personal)}</Txt>
-          <Bar pct={(d.personal / total) * 100} />
+          <Bar pct={(d.personal / Math.max(1, total)) * 100} />
         </Card>
         <Card style={{ flex: 1, gap: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <IconBox icon="office-building-outline" size={36} bg={colors.mintSoft} />
-            <Chip label={`${Math.round((d.negocio / total) * 100)}%`} />
+            <Chip label={`${Math.round((d.negocio / Math.max(1, total)) * 100)}%`} />
           </View>
           <Txt w="m" size={12} color={colors.textSoft}>Gastos del negocio</Txt>
           <Txt w="b" size={20}>{money(d.negocio)}</Txt>
@@ -102,7 +104,7 @@ export default function MovimientosScreen() {
             <Chip label={m.detalle} bg={colors.blueSoft} color={colors.textSoft} w="sb" style={{ alignSelf: 'flex-start' }} />
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Txt w="b" size={15}>- {money(Math.abs(m.monto))}</Txt>
+            <Txt w="b" size={15}>{m.tipo === 'Ingreso' ? '+' : '-'} {money(Math.abs(m.monto))}</Txt>
             <Txt w="sb" size={11} color={colors.primary}>{m.frecuencia}</Txt>
           </View>
         </Card>
