@@ -3,7 +3,7 @@ services:
     name: savemoney-api
     runtime: node
     plan: starter
-    buildCommand: npm ci && npx prisma generate
+    buildCommand: npm ci --include=dev && npx prisma generate
     startCommand: npm run start
     healthCheckPath: /api/v1/health
     envVars:

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Switch, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
+import { Platform, Switch, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card, Chip, Ic, IconBox, Segmented, StackHeader, Txt } from '../components/ui';
@@ -96,7 +96,8 @@ export default function RegistrarScreen() {
                 minWidth: 0,
                 flexShrink: 1,
                 padding: 0,
-                fontFamily: font.xb,
+                fontFamily: Platform.select({ android: 'sans-serif', ios: 'System', default: 'sans-serif' }),
+                fontWeight: '800',
                 fontSize: 34,
                 letterSpacing: 0,
                 color: colors.text,

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ActivityIndicator, Image, ScrollView, StyleProp, StyleSheet, Text, TextStyle,
+  ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextStyle,
   TouchableOpacity, View, ViewStyle,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -80,6 +80,41 @@ export const Button = ({ label, onPress, icon, bg = colors.primary }: {
     {icon ? <Ic name={icon} size={20} color="#fff" /> : null}
     <Txt w="b" size={15} color="#fff">{label}</Txt>
   </TouchableOpacity>
+);
+
+export const FormField = ({ label, value, onChangeText, placeholder, keyboardType = 'default', multiline = false }: {
+  label: string; value: string; onChangeText: (value: string) => void; placeholder?: string;
+  keyboardType?: 'default' | 'numeric' | 'decimal-pad'; multiline?: boolean;
+}) => (
+  <View style={{ gap: 6 }}>
+    <Txt w="b" size={12} color={colors.textSoft}>{label}</Txt>
+    <TextInput
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      placeholderTextColor={colors.textSoft}
+      keyboardType={keyboardType}
+      multiline={multiline}
+      style={{ minHeight: multiline ? 84 : 48, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: colors.blueSofter, color: colors.text, fontFamily: font.r, fontSize: 15, textAlignVertical: multiline ? 'top' : 'center' }}
+    />
+  </View>
+);
+
+export const FormSheet = ({ visible, title, children, saving, onClose, onSave }: {
+  visible: boolean; title: string; children: React.ReactNode; saving: boolean; onClose: () => void; onSave: () => void;
+}) => (
+  <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(10,20,35,0.38)' }}>
+      <View style={{ maxHeight: '88%', borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: colors.bg, padding: 20, gap: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Txt w="xb" size={20}>{title}</Txt>
+          <TouchableOpacity onPress={onClose} accessibilityLabel="Cerrar formulario"><Ic name="close" size={24} /></TouchableOpacity>
+        </View>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 14, paddingBottom: 4 }}>{children}</ScrollView>
+        <Button label={saving ? 'Guardando…' : 'Guardar cambios'} onPress={onSave} icon="check-circle-outline" />
+      </View>
+    </KeyboardAvoidingView>
+  </Modal>
 );
 
 export const Loading = () => (

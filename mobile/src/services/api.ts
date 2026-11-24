@@ -129,7 +129,21 @@ async function loadMovements(from?: string, to?: string) {
   return rows.map((m) => ({ ...m, id_movimiento: Number(m.id_movimiento), id_categoria: Number(m.id_categoria), id_emprendimiento: m.id_emprendimiento == null ? null : Number(m.id_emprendimiento), monto: number(m.monto) }));
 }
 async function loadCategories() {
-  return (await all<RawCategoria>('/categorias', 'categorias')).map((c) => ({ ...c, tipo: c.tipo_categoria?.tipo_movimiento?.nombre === 'Ingreso' ? 'Ingreso' as const : 'Gasto' as const, icono: c.tipo_categoria?.tipo_movimiento?.nombre === 'Ingreso' ? 'trending-up' : 'tag-outline' }));
+  return (await all<RawCategoria>('/categorias', 'categorias')).map((c) => {
+    const ingreso = c.tipo_categoria?.tipo_movimiento?.nombre === 'Ingreso';
+    const nombre = c.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const icono = ingreso ? 'trending-up'
+      : /aliment|comida|restaur/.test(nombre) ? 'silverware-fork-knife'
+        : /transport|movilidad|vehicul/.test(nombre) ? 'car'
+          : /ocio|entreten|juego|video/.test(nombre) ? 'gamepad-variant'
+            : /compra|super|mercado/.test(nombre) ? 'cart-outline'
+              : /vivienda|hogar|casa/.test(nombre) ? 'home-outline'
+                : /salud|medic/.test(nombre) ? 'medical-bag'
+                  : /educacion|estudio/.test(nombre) ? 'school-outline'
+                    : /servicio|internet|luz|agua/.test(nombre) ? 'flash-outline'
+                      : /insumo|negocio|trabajo/.test(nombre) ? 'briefcase-outline' : 'tag-outline';
+    return { ...c, tipo: ingreso ? 'Ingreso' as const : 'Gasto' as const, icono };
+  });
 }
 const sum = <T,>(items: T[], fn: (item: T) => number) => items.reduce((total, item) => total + Math.round(fn(item) * 100), 0) / 100;
 function viewMovements(rows: RawMovimiento[], categories: Awaited<ReturnType<typeof loadCategories>>) {
@@ -152,6 +166,18 @@ export const api = {
   getCategorias: loadCategories,
   getMetodos: async () => { const data = await request<{ metodos_pago: { id_metodo_pago: number; nombre: string }[] }>('/catalogos'); return data.metodos_pago; },
   getEmprendimientos: async () => all<Emprendimiento>('/emprendimientos', 'emprendimientos', { activo: 'true' }),
+  createEmprendimiento: (nombre: string, descripcion: string) => request('/emprendimientos', { method: 'POST', body: JSON.stringify({ nombre, descripcion: descripcion.trim() || undefined }) }),
+  createMeta: (input: { nombre: string; descripcion?: string; monto_objetivo: number; fecha_inicio: string; fecha_limite: string }) => request('/metas-ahorro', { method: 'POST', body: JSON.stringify(input) }),
+  createAporteMeta: (id: number, monto: number, nota = '') => request(`/metas-ahorro/${id}/aportes`, { method: 'POST', body: JSON.stringify({ monto, fecha_aporte: fechaLocal(), nota: nota.trim() || undefined }) }),
+  async savePresupuesto(monto: number, umbral: number, year: number, month: number) {
+    const rows = await all<any>('/presupuestos', 'presupuestos', { anio: year, mes: month });
+    const personal = rows.find((row) => !row.id_emprendimiento);
+    const body = { anio: year, mes: month, monto_total: monto, umbral_alerta_pct: umbral };
+    return personal
+      ? request(`/presupuestos/${personal.id_presupuesto}`, { method: 'PUT', body: JSON.stringify(body) })
+      : request('/presupuestos', { method: 'POST', body: JSON.stringify(body) });
+  },
+  createCompraImpulsiva: (input: { id_categoria: number; articulo: string; monto_estimado: number; motivo?: string; dias_espera: number }) => request('/compras-impulsivas', { method: 'POST', body: JSON.stringify(input) }),
   createMovimiento: async (m: NuevoMovimiento) => {
     if (!Number.isFinite(m.monto) || m.monto <= 0 || !m.id_categoria || !m.id_metodo_pago) throw new Error('Completa un monto, una categoría y un método de pago válidos.');
     if (m.ambito === 'Negocio' && !m.id_emprendimiento) throw new Error('Selecciona un emprendimiento.');
@@ -174,5 +200,6 @@ export const api = {
   async getImpulsivas() { const p = actual(); const prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1); const prev = periodo(prevDate.getFullYear(), prevDate.getMonth() + 1); const [cats, rows, purchases] = await Promise.all([loadCategories(), loadMovements(prev.inicio, p.fin), all<any>('/compras-impulsivas', 'compras')]); const linked = new Set(purchases.map((item) => Number(item.id_movimiento)).filter(Number.isFinite)); const allViews = viewMovements(rows, cats); const impulses = allViews.filter((m) => m.tipo === 'Gasto' && (m.es_impulsivo || linked.has(m.id_movimiento))); const thisMonth = impulses.filter((m) => m.fecha_movimiento >= p.inicio); const lastMonth = impulses.filter((m) => m.fecha_movimiento >= prev.inicio && m.fecha_movimiento < p.inicio); const total = sum(thisMonth, (m) => -m.monto); const prior = sum(lastMonth, (m) => -m.monto); const costs = sum(allViews.filter((m) => m.tipo === 'Gasto' && m.fecha_movimiento >= p.inicio), (m) => -m.monto); const dateLabel = new Date().toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }); const dayAgo = Date.now() - 86400000; const compras24h = thisMonth.filter((m) => m.fecha_registro && Date.parse(m.fecha_registro) >= dayAgo).length; return { mes: dateLabel, total, compras: thisMonth.length, impactoPct: costs ? Math.round(total * 100 / costs) : 0, variacionPct: prior ? Math.round((total - prior) * 100 / prior) : 0, limite: 0, diasRestantes: 0, categorias: group(thisMonth), compras24h }; },
   async getResumen() { const p = actual(); const d = new Date(); d.setMonth(d.getMonth() - 1); const prev = periodo(d.getFullYear(), d.getMonth() + 1); const [cats, rows, goals] = await Promise.all([loadCategories(), loadMovements(prev.inicio, p.fin), all<any>('/metas-ahorro', 'metas')]); const contributions = (await Promise.all(goals.map((g) => all<any>(`/metas-ahorro/${g.id_meta}/aportes`, 'aportes')))).flat(); const views = viewMovements(rows, cats); const curr = views.filter((m) => m.fecha_movimiento >= p.inicio); const old = views.filter((m) => m.fecha_movimiento >= prev.inicio && m.fecha_movimiento < p.inicio); const save = (month: string) => sum(contributions.filter((a) => String(a.fecha_aporte).slice(0, 7) === month), (a) => number(a.monto)); const totals = (list: typeof curr) => ({ ingresos: sum(list.filter((m) => m.tipo === 'Ingreso'), (m) => m.monto), gastos: sum(list.filter((m) => m.tipo === 'Gasto'), (m) => -m.monto) }); const c = totals(curr); const o = totals(old); const pct = (now: number, before: number) => before ? Math.round((now - before) * 100 / before) : 0; const variable = group(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia !== 'Fijo')); return { ingresos: { valor: c.ingresos, var: pct(c.ingresos, o.ingresos) }, gastos: { valor: c.gastos, var: pct(c.gastos, o.gastos) }, ahorro: { valor: save(p.inicio.slice(0, 7)), var: pct(save(p.inicio.slice(0, 7)), save(prev.inicio.slice(0, 7))) }, anterior: { ingresos: o.ingresos, gastos: o.gastos, ahorro: save(prev.inicio.slice(0, 7)) }, balanceNeto: c.ingresos - c.gastos - save(p.inicio.slice(0, 7)), fijos: sum(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia === 'Fijo'), (m) => -m.monto), variables: sum(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia !== 'Fijo'), (m) => -m.monto), mayorVariable: variable[0] ?? { nombre: 'Sin gastos variables', monto: 0, pct: 0 }, categorias: group(curr.filter((m) => m.tipo === 'Gasto') ) }; },
   getAlertas: () => all<Alerta>('/alertas', 'alertas'),
+  revisarAlertasPorVencer: () => all<unknown>('/compras-impulsivas', 'compras', { limit: 1 }),
   marcarAlerta: (id: number) => request(`/alertas/${id}/leer`, { method: 'PATCH' }),
 };

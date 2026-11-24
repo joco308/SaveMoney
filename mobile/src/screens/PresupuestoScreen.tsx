@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt } from '../components/ui';
+import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt, FormField, FormSheet } from '../components/ui';
 import { api } from '../services/api';
 import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
@@ -16,7 +16,25 @@ export const estadoCat = (pct: number) => {
 
 export default function PresupuestoScreen() {
   const nav = useNavigation<any>();
-  const { data: d, error, reload } = useApi(api.getPresupuesto);
+  const [periodo, setPeriodo] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const consultar = useCallback(() => api.getPresupuesto(periodo.getFullYear(), periodo.getMonth() + 1), [periodo]);
+  const { data: d, error, reload } = useApi(consultar);
+  const [editando, setEditando] = useState(false);
+  const [monto, setMonto] = useState('');
+  const [umbral, setUmbral] = useState(75);
+  const [saving, setSaving] = useState(false);
+  const [fallo, setFallo] = useState('');
+  const guardar = async () => {
+    if (saving) return;
+    const value = Number(monto.replace(',', '.'));
+    if (!Number.isFinite(value) || value <= 0) { setFallo('Ingresa un presupuesto mayor que cero.'); return; }
+    setSaving(true); setFallo('');
+    try {
+      await api.savePresupuesto(value, umbral, periodo.getFullYear(), periodo.getMonth() + 1);
+      setEditando(false); reload();
+    } catch (e) { setFallo(e instanceof Error ? e.message : 'No se pudo guardar el presupuesto.'); }
+    finally { setSaving(false); }
+  };
   if (!d) return <EstadoConsulta error={error} reload={reload} />;
   const u = d.umbrales;
   const pctTotal = d.total > 0 ? Math.round((d.gastado / d.total) * 100) : 0;
@@ -29,15 +47,17 @@ export default function PresupuestoScreen() {
       <AppHeader subtitle="Presupuesto" />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.blueSoft, borderRadius: 28, paddingHorizontal: 14, paddingVertical: 12 }}>
+          <TouchableOpacity onPress={() => setPeriodo(new Date(periodo.getFullYear(), periodo.getMonth() - 1, 1))}><Ic name="chevron-left" size={22} color={colors.primary} /></TouchableOpacity>
           <Ic name="calendar-blank-outline" size={20} color={colors.primary} />
           <Txt w="b" size={14} style={{ flex: 1, textAlign: 'center' }}>{d.mesLabel}</Txt>
-          <Ic name="chevron-down" size={18} />
+          <TouchableOpacity onPress={() => setPeriodo(new Date(periodo.getFullYear(), periodo.getMonth() + 1, 1))}><Ic name="chevron-right" size={22} color={colors.primary} /></TouchableOpacity>
         </View>
-        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', borderRadius: 28, paddingHorizontal: 16 }}>
+        <TouchableOpacity onPress={() => { setMonto(d.total ? String(d.total) : ''); setUmbral(d.umbrales[0]?.pct ?? 75); setFallo(''); setEditando(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', borderRadius: 28, paddingHorizontal: 16 }}>
           <Ic name="pencil-box-outline" size={18} color={colors.primary} />
           <Txt w="b" size={12} style={{ textAlign: 'center' }}>Editar{'\n'}presupuesto</Txt>
         </TouchableOpacity>
       </View>
+      {!!fallo && !editando && <Txt color={colors.red}>{fallo}</Txt>}
 
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -134,17 +154,22 @@ export default function PresupuestoScreen() {
         <Txt w="m" size={12} color={colors.textSoft}>Porcentaje configurado en el presupuesto</Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           {u.map((x) => (
-            <View
-              key={x.pct}
-              style={{ width: '47%', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, padding: 14, backgroundColor: x.activo ? colors.primary : colors.blueSofter }}
-            >
+            <TouchableOpacity key={x.pct} onPress={() => { setMonto(d.total ? String(d.total) : ''); setUmbral(x.pct); setFallo(''); setEditando(true); }} style={{ width: '47%', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, padding: 14, backgroundColor: x.activo ? colors.primary : colors.blueSofter }}>
               <Ic name={x.activo ? 'check-circle-outline' : 'circle-outline'} size={18} color={x.activo ? '#fff' : colors.textSoft} />
               <Txt w="b" size={13} color={x.activo ? '#fff' : colors.textSoft}>Al {x.pct}% <Txt w="sb" size={11} color={x.activo ? colors.mint : colors.textSoft}>{x.activo ? 'Activo' : 'Off'}</Txt></Txt>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
         {u.length === 0 && <Txt>No hay un presupuesto personal para este mes.</Txt>}
       </Card>
+      <FormSheet visible={editando} title="Editar presupuesto mensual" saving={saving} onClose={() => setEditando(false)} onSave={guardar}>
+        <FormField label="Límite mensual (Bs)" value={monto} onChangeText={setMonto} placeholder="5000" keyboardType="decimal-pad" />
+        <Txt w="b" size={12} color={colors.textSoft}>Avisarme al alcanzar</Txt>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {[50, 75, 90, 100].map((pct) => <TouchableOpacity key={pct} onPress={() => setUmbral(pct)}><Chip label={`${pct}%${umbral === pct ? ' · Activo' : ''}`} bg={umbral === pct ? colors.primary : colors.blueSoft} color={umbral === pct ? '#fff' : colors.text} /></TouchableOpacity>)}
+        </View>
+        {!!fallo && <Txt color={colors.red}>{fallo}</Txt>}
+      </FormSheet>
     </Screen>
   );
 }

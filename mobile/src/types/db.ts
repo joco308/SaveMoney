@@ -101,6 +101,7 @@ export interface Alerta {
   mensaje: string;
   fecha_generacion: string;
   fecha_lectura?: string | null;
+  tipo_alerta?: { codigo: string; descripcion: string };
 }
 
 // ---------- Modelos de vista (lo que consumen las pantallas) ----------

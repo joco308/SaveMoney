@@ -1,12 +1,13 @@
 import React from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt } from '../components/ui';
-import { api } from '../services/api';
+import { AppHeader, Bar, Card, Chip, Ic, IconBox, Screen, Txt, FormField, FormSheet } from '../components/ui';
+import { api, fechaLocal } from '../services/api';
 import { RecordatorioAhorro } from '../components/RecordatorioAhorro';
 import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
 import { colors, money } from '../theme';
+import { useState } from 'react';
 
 const Ring = ({ pct, size = 52 }: { pct: number; size?: number }) => {
   const r = (size - 8) / 2;
@@ -25,6 +26,37 @@ const Ring = ({ pct, size = 52 }: { pct: number; size?: number }) => {
 
 export default function MetasScreen() {
   const { data: d, error, reload } = useApi(api.getMetas);
+  const [form, setForm] = useState<'meta' | 'aporte' | null>(null);
+  const [metaSeleccionada, setMetaSeleccionada] = useState<number>();
+  const [nombre, setNombre] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [objetivo, setObjetivo] = useState('');
+  const [fechaLimite, setFechaLimite] = useState('');
+  const [montoAporte, setMontoAporte] = useState('');
+  const [notaAporte, setNotaAporte] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [fallo, setFallo] = useState('');
+  const guardar = async () => {
+    if (saving) return;
+    setSaving(true); setFallo('');
+    try {
+      if (form === 'meta') {
+        const inicio = fechaLocal();
+        if (!nombre.trim()) throw new Error('Escribe el nombre de la meta.');
+        if (!Number(objetivo) || Number(objetivo) <= 0) throw new Error('Ingresa un objetivo mayor que cero.');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaLimite) || fechaLimite < inicio) throw new Error('La fecha límite debe ser hoy o posterior, en formato AAAA-MM-DD.');
+        await api.createMeta({ nombre: nombre.trim(), descripcion: descripcion.trim() || undefined, monto_objetivo: Number(objetivo.replace(',', '.')), fecha_inicio: inicio, fecha_limite: fechaLimite });
+        setNombre(''); setDescripcion(''); setObjetivo(''); setFechaLimite('');
+      } else if (form === 'aporte' && metaSeleccionada) {
+        const amount = Number(montoAporte.replace(',', '.'));
+        if (!Number.isFinite(amount) || amount <= 0) throw new Error('Ingresa un aporte mayor que cero.');
+        await api.createAporteMeta(metaSeleccionada, amount, notaAporte);
+        setMontoAporte(''); setNotaAporte('');
+      }
+      setForm(null); reload();
+    } catch (e) { setFallo(e instanceof Error ? e.message : 'No se pudo guardar el cambio.'); }
+    finally { setSaving(false); }
+  };
   if (!d) return <EstadoConsulta error={error} reload={reload} />;
   const pctG = d.objetivoGlobal > 0 ? Math.round((d.totalAcumulado / d.objetivoGlobal) * 100) : 0;
   const maxV = Math.max(1, ...d.proyeccion.map((p) => p.valor));
@@ -37,7 +69,9 @@ export default function MetasScreen() {
           <Txt w="b" size={11} color={colors.primary}>TUS PROYECTOS</Txt>
           <Txt w="xb" size={24}>Mis Metas de Ahorro</Txt>
         </View>
+        <TouchableOpacity onPress={() => { setFallo(''); setForm('meta'); }}><Chip label="＋ Nueva meta" /></TouchableOpacity>
       </View>
+      {!!fallo && <Txt color={colors.red}>{fallo}</Txt>}
 
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -96,7 +130,7 @@ export default function MetasScreen() {
             ) : null}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Txt w="b" size={12} color={colors.textSoft}>{m.recordatorio}</Txt>
-              <Txt w="b" size={12} color={colors.primary}>Aportar →</Txt>
+              <TouchableOpacity onPress={() => { setMetaSeleccionada(m.id_meta); setFallo(''); setForm('aporte'); }}><Txt w="b" size={12} color={colors.primary}>Aportar →</Txt></TouchableOpacity>
             </View>
           </Card>
         );
@@ -124,6 +158,17 @@ export default function MetasScreen() {
         </View>
       </Card>
       <RecordatorioAhorro />
+      <FormSheet visible={form !== null} title={form === 'meta' ? 'Crear meta de ahorro' : 'Registrar aporte'} saving={saving} onClose={() => setForm(null)} onSave={guardar}>
+        {form === 'meta' ? <>
+          <FormField label="Nombre de la meta" value={nombre} onChangeText={setNombre} placeholder="Ej. Viaje de vacaciones" />
+          <FormField label="Monto objetivo (Bs)" value={objetivo} onChangeText={setObjetivo} placeholder="5000" keyboardType="decimal-pad" />
+          <FormField label="Fecha límite (AAAA-MM-DD)" value={fechaLimite} onChangeText={setFechaLimite} placeholder="2027-12-31" />
+          <FormField label="Descripción" value={descripcion} onChangeText={setDescripcion} placeholder="¿Para qué estás ahorrando?" multiline />
+        </> : <>
+          <FormField label="Monto del aporte (Bs)" value={montoAporte} onChangeText={setMontoAporte} placeholder="100" keyboardType="decimal-pad" />
+          <FormField label="Nota" value={notaAporte} onChangeText={setNotaAporte} placeholder="Aporte semanal" />
+        </>}
+      </FormSheet>
     </Screen>
   );
 }

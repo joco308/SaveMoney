@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Chip, Ic, IconBox, Segmented, Txt } from '../components/ui';
@@ -10,6 +10,7 @@ import { colors } from '../theme';
 import { Ambito, Frecuencia, TipoMov } from '../types/db';
 
 const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫'];
+const keyRows = Array.from({ length: Math.ceil(keys.length / 3) }, (_, index) => keys.slice(index * 3, index * 3 + 3));
 
 export default function RegistroRapidoScreen() {
   const nav = useNavigation<any>();
@@ -108,8 +109,21 @@ export default function RegistroRapidoScreen() {
           </View>
         )}
         <View style={{ backgroundColor: colors.blueSofter, borderRadius: 20, padding: 16, alignItems: 'center', gap: 4 }}>
-          <Txt w="xb" size={40}>
-            <Txt w="b" size={22} color={colors.textSoft}>Bs </Txt>{txt || '0'}<Txt w="r" size={40} color={colors.primary}>|</Txt>
+          <Txt
+            w="xb"
+            size={38}
+            style={{
+              width: '100%',
+              textAlign: 'center',
+              letterSpacing: 0,
+              includeFontPadding: false,
+              writingDirection: 'ltr',
+              fontFamily: Platform.select({ android: 'sans-serif', ios: 'System', default: 'sans-serif' }),
+              fontWeight: '800',
+            }}
+          >
+            <Txt w="b" size={22} color={colors.textSoft} style={{ fontFamily: Platform.select({ android: 'sans-serif', ios: 'System', default: 'sans-serif' }), fontWeight: '700' }}>Bs </Txt>
+            {txt || '0'}<Txt w="r" size={38} color={colors.primary} style={{ fontFamily: Platform.select({ android: 'sans-serif', ios: 'System', default: 'sans-serif' }) }}>|</Txt>
           </Txt>
         </View>
 
@@ -143,11 +157,15 @@ export default function RegistroRapidoScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {keys.map((k) => (
-            <TouchableOpacity key={k} onPress={() => press(k)} style={{ width: '31.5%', height: 54, borderRadius: 16, backgroundColor: colors.blueSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Txt w="b" size={22}>{k}</Txt>
-            </TouchableOpacity>
+        <View style={{ gap: 8 }}>
+          {keyRows.map((row, rowIndex) => (
+            <View key={rowIndex} style={{ flexDirection: 'row', gap: 8 }}>
+              {row.map((k) => (
+                <TouchableOpacity key={k} onPress={() => press(k)} style={{ flex: 1, height: 54, borderRadius: 16, backgroundColor: colors.blueSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Txt w="b" size={22}>{k === '⌫' ? '⌫' : k}</Txt>
+                </TouchableOpacity>
+              ))}
+            </View>
           ))}
         </View>
 

@@ -1,12 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { Platform, Switch, View } from 'react-native';
+import { Switch, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { Card, Txt } from './ui';
 import { colors } from '../theme';
 
 const identificador = 'savemoney-recordatorio-ahorro-semanal';
-const canal = 'savemoney-recordatorios';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,13 +43,6 @@ export function RecordatorioAhorro() {
     setError('');
     try {
       if (valor) {
-        if (Platform.OS === 'android') {
-          await Notifications.setNotificationChannelAsync(canal, {
-            name: 'Recordatorios de ahorro',
-            // AndroidImportance.DEFAULT de expo-notifications.
-            importance: 5,
-          });
-        }
         const actual = await Notifications.getPermissionsAsync();
         const permiso = actual.granted ? actual : await Notifications.requestPermissionsAsync();
         if (!permiso.granted) throw new Error('Activa las notificaciones de SaveMoney en los ajustes del teléfono.');
@@ -62,7 +54,6 @@ export function RecordatorioAhorro() {
             weekday: 2,
             hour: 9,
             minute: 0,
-            channelId: canal,
           },
         });
       } else {

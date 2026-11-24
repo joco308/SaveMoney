@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { AppHeader, Card, Chip, Ic, IconBox, Screen, SectionTitle, Txt, Bar } from '../components/ui';
+import { AppHeader, Card, Chip, Ic, IconBox, Screen, SectionTitle, Txt, Bar, FormField, FormSheet } from '../components/ui';
 import { api } from '../services/api';
 import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
@@ -8,11 +8,26 @@ import { colors, money } from '../theme';
 
 export default function MovimientosScreen() {
   const [tab, setTab] = useState<'Todos' | 'Personal' | 'Negocio'>('Todos');
+  const [mostrarNegocio, setMostrarNegocio] = useState(false);
+  const [nombreNegocio, setNombreNegocio] = useState('');
+  const [descripcionNegocio, setDescripcionNegocio] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const [fallo, setFallo] = useState('');
   const consultar = useCallback(() => api.getNegocio(tab), [tab]);
   const { data: d, error, reload } = useApi(consultar);
   if (!d) return <EstadoConsulta error={error} reload={reload} />;
   const total = d.personal + d.negocio;
   const fijoPct = Math.round((d.fijos / Math.max(1, d.fijos + d.variables)) * 100);
+  const guardarNegocio = async () => {
+    if (guardando) return;
+    setGuardando(true); setFallo('');
+    try {
+      if (!nombreNegocio.trim()) throw new Error('Escribe el nombre de tu emprendimiento.');
+      await api.createEmprendimiento(nombreNegocio, descripcionNegocio);
+      setMostrarNegocio(false); setNombreNegocio(''); setDescripcionNegocio(''); reload();
+    } catch (e) { setFallo(e instanceof Error ? e.message : 'No se pudo guardar el emprendimiento.'); }
+    finally { setGuardando(false); }
+  };
 
   return (
     <Screen>
@@ -76,8 +91,9 @@ export default function MovimientosScreen() {
           <Txt w="xb" size={18}>Mis Negocios</Txt>
           <Chip label={`${d.negocios.length} Activo`} />
         </View>
-        <Chip label="＋ Nuevo" bg={colors.blueSoft} size={12} />
+        <TouchableOpacity onPress={() => { setFallo(''); setMostrarNegocio(true); }}><Chip label="＋ Nuevo" bg={colors.blueSoft} size={12} /></TouchableOpacity>
       </View>
+      {!!fallo && <Txt color={colors.red}>{fallo}</Txt>}
       {d.negocios.map((n) => (
         <Card key={n.id} style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
@@ -117,6 +133,10 @@ export default function MovimientosScreen() {
           <Txt w="m" size={12} color={colors.textSoft}>Mantener cuentas claras te ayuda a deducir costos operativos con facilidad al cierre de trimestre.</Txt>
         </View>
       </Card>
+      <FormSheet visible={mostrarNegocio} title="Nuevo emprendimiento" saving={guardando} onClose={() => setMostrarNegocio(false)} onSave={guardarNegocio}>
+        <FormField label="Nombre" value={nombreNegocio} onChangeText={setNombreNegocio} placeholder="Ej. Cafetería Dulce Aroma" />
+        <FormField label="Descripción o rubro" value={descripcionNegocio} onChangeText={setDescripcionNegocio} placeholder="Alimentos y bebidas" multiline />
+      </FormSheet>
     </Screen>
   );
 }
