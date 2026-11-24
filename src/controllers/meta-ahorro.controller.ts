@@ -148,3 +148,9 @@ export const eliminarAporteMetaController = asyncHandler(
     res.status(200).json({ success: true, data: resultado });
   },
 );
+
+export const obtenerAporteMetaController = asyncHandler(async (req, res) => {
+  const { id, idAporte } = aporteMetaParamsSchema.parse(req.validated?.params);
+  const aporte = await metaAhorroService.obtenerAporteMeta(id, idAporte, req.usuario!.id_usuario);
+  res.json({ success: true, data: aporte });
+});

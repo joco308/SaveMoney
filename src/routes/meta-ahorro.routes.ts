@@ -20,6 +20,7 @@ import {
   actualizarMetaAhorroController,
   eliminarMetaAhorroController,
   cancelarMetaAhorroController,
+  obtenerAporteMetaController,
   listarAportesMetaController,
   crearAporteMetaController,
   actualizarAporteMetaController,
@@ -49,6 +50,12 @@ metaAhorroRouter.post(
     body: crearAporteMetaSchema,
   }),
   crearAporteMetaController,
+);
+
+metaAhorroRouter.get(
+  "/:id/aportes/:idAporte",
+  validate({ params: aporteMetaParamsSchema }),
+  obtenerAporteMetaController,
 );
 
 metaAhorroRouter.put(

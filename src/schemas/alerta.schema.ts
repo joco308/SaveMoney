@@ -9,3 +9,5 @@ export const listarAlertasSchema = z.object({
 export const alertaIdSchema = z.object({
   id: z.coerce.bigint().positive(),
 });
+
+export const lecturaSchema = z.object({ leida: z.boolean() }).strict();

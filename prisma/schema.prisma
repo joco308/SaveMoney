@@ -160,6 +160,8 @@ model movimiento {
   fecha_movimiento  DateTime          @db.Date
   descripcion       String?           @db.VarChar(200)
   fecha_registro    DateTime          @db.Timestamp(6)
+  frecuencia        String?           @db.Text
+  es_impulsivo      Boolean           @default(false)
   compra_impulsiva  compra_impulsiva?
   categoria         categoria         @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
   emprendimiento    emprendimiento?   @relation(fields: [id_emprendimiento], references: [id_emprendimiento], onDelete: NoAction, onUpdate: NoAction)
@@ -247,6 +249,7 @@ model usuario {
   apellidos        String             @db.VarChar(80)
   email            String             @unique @db.VarChar(120)
   hash_contrasena  String             @db.VarChar(255)
+    auth_user_id     String?            @unique @db.Uuid
   telefono         String?            @db.VarChar(20)
   fecha_nacimiento DateTime?          @db.Date
   activo           Boolean

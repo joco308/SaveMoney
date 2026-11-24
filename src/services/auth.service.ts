@@ -13,6 +13,44 @@ const jwtSecret = new TextEncoder().encode(env.JWT_SECRET);
 const ACCESS_TTL = env.JWT_ACCESS_TTL_SECONDS;
 const REFRESH_TTL = env.JWT_REFRESH_TTL_SECONDS;
 
+async function authenticateSupabaseUser(email: string, password: string) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return null;
+
+  let response: Response;
+  try {
+    response = await fetch(`${env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        apikey: env.SUPABASE_PUBLISHABLE_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    throw new ApiError(502, "INTERNAL_SERVER_ERROR", "No se pudo validar la cuenta con Supabase Auth");
+  }
+
+  if (response.status === 400 || response.status === 401) return null;
+  if (!response.ok) {
+    throw new ApiError(502, "INTERNAL_SERVER_ERROR", "Supabase Auth no está disponible temporalmente");
+  }
+
+  const result = await response.json() as { user?: { id?: string } };
+  const authUserId = result.user?.id;
+  if (!authUserId) return null;
+
+  const usuario = await prisma.usuario.findFirst({
+    where: { auth_user_id: authUserId },
+  });
+
+  if (!usuario) {
+    throw ApiError.forbidden("La cuenta de Supabase no tiene un perfil SaveMoney vinculado");
+  }
+
+  return usuario;
+}
+
 function hashRefreshToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -137,13 +175,14 @@ export async function registerUser(data: {
 }
 
 export async function loginUser(email: string, password: string) {
-  const usuario = await findUsuarioByEmail(email);
+  const usuarioSupabase = await authenticateSupabaseUser(email, password);
+  const usuario = usuarioSupabase ?? await findUsuarioByEmail(email);
 
   if (!usuario) {
     throw ApiError.unauthorized("Correo electrónico o contraseña incorrectos");
   }
 
-  const passwordCorrecta = await bcrypt.compare(
+  const passwordCorrecta = usuarioSupabase !== null || await bcrypt.compare(
     password,
     usuario.hash_contrasena,
   );
