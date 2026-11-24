@@ -46,6 +46,10 @@ export default function RegistrarScreen() {
     setSaving(true);
     setFallo('');
     try {
+      if (ambito === 'Negocio' && !empresa) throw new Error('Selecciona un emprendimiento.');
+      if (!cat) throw new Error('Selecciona una categoría.');
+      if (!metodo) throw new Error('Selecciona un método de pago.');
+      if (valor <= 0) throw new Error('Ingresa un monto mayor que cero.');
       await api.createMovimiento({
         tipo, monto: valor, ambito, frecuencia: frecuencia, id_categoria: cat,
         id_metodo_pago: metodo, id_emprendimiento: empresa,
@@ -78,11 +82,26 @@ export default function RegistrarScreen() {
 
         <View style={{ alignItems: 'center', gap: 6 }}>
           <Txt w="sb" size={12} color={colors.textSoft}>MONTO A REGISTRAR</Txt>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <Txt w="xb" size={22} color={gasto ? colors.red : colors.primary}>Bs</Txt>
             <TextInput
-              value={monto} onChangeText={setMonto} keyboardType="decimal-pad"
-              style={{ fontFamily: font.xb, fontSize: 40, color: colors.text, minWidth: 120, textAlign: 'center' }}
+              value={monto}
+              onChangeText={setMonto}
+              keyboardType="decimal-pad"
+              maxLength={15}
+              allowFontScaling={false}
+              style={{
+                width: 230,
+                maxWidth: '78%',
+                minWidth: 0,
+                flexShrink: 1,
+                padding: 0,
+                fontFamily: font.xb,
+                fontSize: 34,
+                letterSpacing: 0,
+                color: colors.text,
+                textAlign: 'center',
+              }}
             />
           </View>
           <Chip label={`Bs ${Math.round(valor)}`} bg={colors.mintSoft} />

@@ -2004,7 +2004,9 @@ export const MovimientoScalarFieldEnum = {
   monto: 'monto',
   fecha_movimiento: 'fecha_movimiento',
   descripcion: 'descripcion',
-  fecha_registro: 'fecha_registro'
+  fecha_registro: 'fecha_registro',
+  frecuencia: 'frecuencia',
+  es_impulsivo: 'es_impulsivo'
 } as const
 
 export type MovimientoScalarFieldEnum = (typeof MovimientoScalarFieldEnum)[keyof typeof MovimientoScalarFieldEnum]
@@ -2078,6 +2080,7 @@ export const UsuarioScalarFieldEnum = {
   apellidos: 'apellidos',
   email: 'email',
   hash_contrasena: 'hash_contrasena',
+  auth_user_id: 'auth_user_id',
   telefono: 'telefono',
   fecha_nacimiento: 'fecha_nacimiento',
   activo: 'activo',

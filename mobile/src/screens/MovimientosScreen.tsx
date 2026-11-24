@@ -22,7 +22,7 @@ export default function MovimientosScreen() {
           <Txt w="b" size={11} color={colors.primary}>FINANZAS HÍBRIDAS</Txt>
           <Txt w="xb" size={26}>Mis Gastos</Txt>
         </View>
-        <Chip label="Sep 2024" size={12} style={{ paddingVertical: 8, paddingHorizontal: 14 }} />
+        <Chip label={new Date().toLocaleDateString('es-BO', { month: 'short', year: 'numeric' })} size={12} style={{ paddingVertical: 8, paddingHorizontal: 14 }} />
       </View>
 
       <View style={{ flexDirection: 'row', backgroundColor: colors.blueSoft, borderRadius: 16, padding: 4 }}>

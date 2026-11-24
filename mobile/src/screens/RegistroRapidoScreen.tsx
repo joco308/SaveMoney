@@ -47,9 +47,14 @@ export default function RegistroRapidoScreen() {
     setSaving(true);
     setFallo('');
     try {
+      const metodoPago = metodos.find((p) => p.nombre === 'Efectivo')?.id_metodo_pago;
+      if (ambito === 'Negocio' && !empresa) throw new Error('Selecciona un emprendimiento.');
+      if (!cat) throw new Error('Selecciona una categoría.');
+      if (!metodoPago) throw new Error('No hay método de pago Efectivo configurado.');
+      if (valor <= 0) throw new Error('Ingresa un monto mayor que cero.');
       await api.createMovimiento({
         tipo, monto: valor, ambito, frecuencia: frec, id_categoria: cat,
-        id_metodo_pago: metodos.find((p) => p.nombre === 'Efectivo')?.id_metodo_pago, id_emprendimiento: empresa,
+        id_metodo_pago: metodoPago, id_emprendimiento: empresa,
         fecha: fechaLocal(), impulsivo: tipo === 'Gasto' && impulsivo,
       });
       nav.goBack();

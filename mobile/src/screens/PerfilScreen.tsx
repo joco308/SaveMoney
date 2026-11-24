@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { EstadoConsulta } from '../components/EstadoConsulta';
 import { useApi } from '../hooks';
-import { api } from '../services/api';
-import { getSupabase } from '../services/supabase';
+import { api, auth } from '../services/api';
 import { Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppHeader, Button, Card, Ic, IconBox, Screen, Txt } from '../components/ui';
@@ -28,8 +27,8 @@ export default function PerfilScreen() {
       </Card>
       {!!fallo && <Txt color={colors.red}>{fallo}</Txt>}
       <Button label="Cerrar sesión" onPress={async () => {
-        const { error: falloSesion } = await getSupabase().auth.signOut();
-        if (falloSesion) setFallo(falloSesion.message);
+        try { await auth.logout(); }
+        catch (error) { setFallo(error instanceof Error ? error.message : 'No se pudo cerrar la sesión.'); }
       }} />
       {items.map((x) => (
         <TouchableOpacity key={x.go} onPress={() => nav.navigate(x.go)}>

@@ -54,6 +54,8 @@ export type MovimientoMinAggregateOutputType = {
   fecha_movimiento: Date | null
   descripcion: string | null
   fecha_registro: Date | null
+  frecuencia: string | null
+  es_impulsivo: boolean | null
 }
 
 export type MovimientoMaxAggregateOutputType = {
@@ -66,6 +68,8 @@ export type MovimientoMaxAggregateOutputType = {
   fecha_movimiento: Date | null
   descripcion: string | null
   fecha_registro: Date | null
+  frecuencia: string | null
+  es_impulsivo: boolean | null
 }
 
 export type MovimientoCountAggregateOutputType = {
@@ -78,6 +82,8 @@ export type MovimientoCountAggregateOutputType = {
   fecha_movimiento: number
   descripcion: number
   fecha_registro: number
+  frecuencia: number
+  es_impulsivo: number
   _all: number
 }
 
@@ -110,6 +116,8 @@ export type MovimientoMinAggregateInputType = {
   fecha_movimiento?: true
   descripcion?: true
   fecha_registro?: true
+  frecuencia?: true
+  es_impulsivo?: true
 }
 
 export type MovimientoMaxAggregateInputType = {
@@ -122,6 +130,8 @@ export type MovimientoMaxAggregateInputType = {
   fecha_movimiento?: true
   descripcion?: true
   fecha_registro?: true
+  frecuencia?: true
+  es_impulsivo?: true
 }
 
 export type MovimientoCountAggregateInputType = {
@@ -134,6 +144,8 @@ export type MovimientoCountAggregateInputType = {
   fecha_movimiento?: true
   descripcion?: true
   fecha_registro?: true
+  frecuencia?: true
+  es_impulsivo?: true
   _all?: true
 }
 
@@ -233,6 +245,8 @@ export type MovimientoGroupByOutputType = {
   fecha_movimiento: Date
   descripcion: string | null
   fecha_registro: Date
+  frecuencia: string | null
+  es_impulsivo: boolean
   _count: MovimientoCountAggregateOutputType | null
   _avg: MovimientoAvgAggregateOutputType | null
   _sum: MovimientoSumAggregateOutputType | null
@@ -268,6 +282,8 @@ export type movimientoWhereInput = {
   fecha_movimiento?: Prisma.DateTimeFilter<"movimiento"> | Date | string
   descripcion?: Prisma.StringNullableFilter<"movimiento"> | string | null
   fecha_registro?: Prisma.DateTimeFilter<"movimiento"> | Date | string
+  frecuencia?: Prisma.StringNullableFilter<"movimiento"> | string | null
+  es_impulsivo?: Prisma.BoolFilter<"movimiento"> | boolean
   compra_impulsiva?: Prisma.XOR<Prisma.Compra_impulsivaNullableScalarRelationFilter, Prisma.compra_impulsivaWhereInput> | null
   categoria?: Prisma.XOR<Prisma.CategoriaScalarRelationFilter, Prisma.categoriaWhereInput>
   emprendimiento?: Prisma.XOR<Prisma.EmprendimientoNullableScalarRelationFilter, Prisma.emprendimientoWhereInput> | null
@@ -285,6 +301,8 @@ export type movimientoOrderByWithRelationInput = {
   fecha_movimiento?: Prisma.SortOrder
   descripcion?: Prisma.SortOrderInput | Prisma.SortOrder
   fecha_registro?: Prisma.SortOrder
+  frecuencia?: Prisma.SortOrderInput | Prisma.SortOrder
+  es_impulsivo?: Prisma.SortOrder
   compra_impulsiva?: Prisma.compra_impulsivaOrderByWithRelationInput
   categoria?: Prisma.categoriaOrderByWithRelationInput
   emprendimiento?: Prisma.emprendimientoOrderByWithRelationInput
@@ -305,6 +323,8 @@ export type movimientoWhereUniqueInput = Prisma.AtLeast<{
   fecha_movimiento?: Prisma.DateTimeFilter<"movimiento"> | Date | string
   descripcion?: Prisma.StringNullableFilter<"movimiento"> | string | null
   fecha_registro?: Prisma.DateTimeFilter<"movimiento"> | Date | string
+  frecuencia?: Prisma.StringNullableFilter<"movimiento"> | string | null
+  es_impulsivo?: Prisma.BoolFilter<"movimiento"> | boolean
   compra_impulsiva?: Prisma.XOR<Prisma.Compra_impulsivaNullableScalarRelationFilter, Prisma.compra_impulsivaWhereInput> | null
   categoria?: Prisma.XOR<Prisma.CategoriaScalarRelationFilter, Prisma.categoriaWhereInput>
   emprendimiento?: Prisma.XOR<Prisma.EmprendimientoNullableScalarRelationFilter, Prisma.emprendimientoWhereInput> | null
@@ -322,6 +342,8 @@ export type movimientoOrderByWithAggregationInput = {
   fecha_movimiento?: Prisma.SortOrder
   descripcion?: Prisma.SortOrderInput | Prisma.SortOrder
   fecha_registro?: Prisma.SortOrder
+  frecuencia?: Prisma.SortOrderInput | Prisma.SortOrder
+  es_impulsivo?: Prisma.SortOrder
   _count?: Prisma.movimientoCountOrderByAggregateInput
   _avg?: Prisma.movimientoAvgOrderByAggregateInput
   _max?: Prisma.movimientoMaxOrderByAggregateInput
@@ -342,6 +364,8 @@ export type movimientoScalarWhereWithAggregatesInput = {
   fecha_movimiento?: Prisma.DateTimeWithAggregatesFilter<"movimiento"> | Date | string
   descripcion?: Prisma.StringNullableWithAggregatesFilter<"movimiento"> | string | null
   fecha_registro?: Prisma.DateTimeWithAggregatesFilter<"movimiento"> | Date | string
+  frecuencia?: Prisma.StringNullableWithAggregatesFilter<"movimiento"> | string | null
+  es_impulsivo?: Prisma.BoolWithAggregatesFilter<"movimiento"> | boolean
 }
 
 export type movimientoCreateInput = {
@@ -350,6 +374,8 @@ export type movimientoCreateInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaCreateNestedOneWithoutMovimientoInput
   categoria: Prisma.categoriaCreateNestedOneWithoutMovimientoInput
   emprendimiento?: Prisma.emprendimientoCreateNestedOneWithoutMovimientoInput
@@ -367,6 +393,8 @@ export type movimientoUncheckedCreateInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedOneWithoutMovimientoInput
 }
 
@@ -376,6 +404,8 @@ export type movimientoUpdateInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUpdateOneWithoutMovimientoNestedInput
   categoria?: Prisma.categoriaUpdateOneRequiredWithoutMovimientoNestedInput
   emprendimiento?: Prisma.emprendimientoUpdateOneWithoutMovimientoNestedInput
@@ -393,6 +423,8 @@ export type movimientoUncheckedUpdateInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateOneWithoutMovimientoNestedInput
 }
 
@@ -406,6 +438,8 @@ export type movimientoCreateManyInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoUpdateManyMutationInput = {
@@ -414,6 +448,8 @@ export type movimientoUpdateManyMutationInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type movimientoUncheckedUpdateManyInput = {
@@ -426,6 +462,8 @@ export type movimientoUncheckedUpdateManyInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type MovimientoListRelationFilter = {
@@ -453,6 +491,8 @@ export type movimientoCountOrderByAggregateInput = {
   fecha_movimiento?: Prisma.SortOrder
   descripcion?: Prisma.SortOrder
   fecha_registro?: Prisma.SortOrder
+  frecuencia?: Prisma.SortOrder
+  es_impulsivo?: Prisma.SortOrder
 }
 
 export type movimientoAvgOrderByAggregateInput = {
@@ -474,6 +514,8 @@ export type movimientoMaxOrderByAggregateInput = {
   fecha_movimiento?: Prisma.SortOrder
   descripcion?: Prisma.SortOrder
   fecha_registro?: Prisma.SortOrder
+  frecuencia?: Prisma.SortOrder
+  es_impulsivo?: Prisma.SortOrder
 }
 
 export type movimientoMinOrderByAggregateInput = {
@@ -486,6 +528,8 @@ export type movimientoMinOrderByAggregateInput = {
   fecha_movimiento?: Prisma.SortOrder
   descripcion?: Prisma.SortOrder
   fecha_registro?: Prisma.SortOrder
+  frecuencia?: Prisma.SortOrder
+  es_impulsivo?: Prisma.SortOrder
 }
 
 export type movimientoSumOrderByAggregateInput = {
@@ -687,6 +731,8 @@ export type movimientoCreateWithoutCategoriaInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaCreateNestedOneWithoutMovimientoInput
   emprendimiento?: Prisma.emprendimientoCreateNestedOneWithoutMovimientoInput
   metodo_pago: Prisma.metodo_pagoCreateNestedOneWithoutMovimientoInput
@@ -702,6 +748,8 @@ export type movimientoUncheckedCreateWithoutCategoriaInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedOneWithoutMovimientoInput
 }
 
@@ -744,6 +792,8 @@ export type movimientoScalarWhereInput = {
   fecha_movimiento?: Prisma.DateTimeFilter<"movimiento"> | Date | string
   descripcion?: Prisma.StringNullableFilter<"movimiento"> | string | null
   fecha_registro?: Prisma.DateTimeFilter<"movimiento"> | Date | string
+  frecuencia?: Prisma.StringNullableFilter<"movimiento"> | string | null
+  es_impulsivo?: Prisma.BoolFilter<"movimiento"> | boolean
 }
 
 export type movimientoCreateWithoutCompra_impulsivaInput = {
@@ -752,6 +802,8 @@ export type movimientoCreateWithoutCompra_impulsivaInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   categoria: Prisma.categoriaCreateNestedOneWithoutMovimientoInput
   emprendimiento?: Prisma.emprendimientoCreateNestedOneWithoutMovimientoInput
   metodo_pago: Prisma.metodo_pagoCreateNestedOneWithoutMovimientoInput
@@ -768,6 +820,8 @@ export type movimientoUncheckedCreateWithoutCompra_impulsivaInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoCreateOrConnectWithoutCompra_impulsivaInput = {
@@ -792,6 +846,8 @@ export type movimientoUpdateWithoutCompra_impulsivaInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   categoria?: Prisma.categoriaUpdateOneRequiredWithoutMovimientoNestedInput
   emprendimiento?: Prisma.emprendimientoUpdateOneWithoutMovimientoNestedInput
   metodo_pago?: Prisma.metodo_pagoUpdateOneRequiredWithoutMovimientoNestedInput
@@ -808,6 +864,8 @@ export type movimientoUncheckedUpdateWithoutCompra_impulsivaInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type movimientoCreateWithoutEmprendimientoInput = {
@@ -816,6 +874,8 @@ export type movimientoCreateWithoutEmprendimientoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaCreateNestedOneWithoutMovimientoInput
   categoria: Prisma.categoriaCreateNestedOneWithoutMovimientoInput
   metodo_pago: Prisma.metodo_pagoCreateNestedOneWithoutMovimientoInput
@@ -831,6 +891,8 @@ export type movimientoUncheckedCreateWithoutEmprendimientoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedOneWithoutMovimientoInput
 }
 
@@ -866,6 +928,8 @@ export type movimientoCreateWithoutMetodo_pagoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaCreateNestedOneWithoutMovimientoInput
   categoria: Prisma.categoriaCreateNestedOneWithoutMovimientoInput
   emprendimiento?: Prisma.emprendimientoCreateNestedOneWithoutMovimientoInput
@@ -881,6 +945,8 @@ export type movimientoUncheckedCreateWithoutMetodo_pagoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedOneWithoutMovimientoInput
 }
 
@@ -916,6 +982,8 @@ export type movimientoCreateWithoutUsuarioInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaCreateNestedOneWithoutMovimientoInput
   categoria: Prisma.categoriaCreateNestedOneWithoutMovimientoInput
   emprendimiento?: Prisma.emprendimientoCreateNestedOneWithoutMovimientoInput
@@ -931,6 +999,8 @@ export type movimientoUncheckedCreateWithoutUsuarioInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedCreateNestedOneWithoutMovimientoInput
 }
 
@@ -969,6 +1039,8 @@ export type movimientoCreateManyCategoriaInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoUpdateWithoutCategoriaInput = {
@@ -977,6 +1049,8 @@ export type movimientoUpdateWithoutCategoriaInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUpdateOneWithoutMovimientoNestedInput
   emprendimiento?: Prisma.emprendimientoUpdateOneWithoutMovimientoNestedInput
   metodo_pago?: Prisma.metodo_pagoUpdateOneRequiredWithoutMovimientoNestedInput
@@ -992,6 +1066,8 @@ export type movimientoUncheckedUpdateWithoutCategoriaInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateOneWithoutMovimientoNestedInput
 }
 
@@ -1004,6 +1080,8 @@ export type movimientoUncheckedUpdateManyWithoutCategoriaInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type movimientoCreateManyEmprendimientoInput = {
@@ -1015,6 +1093,8 @@ export type movimientoCreateManyEmprendimientoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoUpdateWithoutEmprendimientoInput = {
@@ -1023,6 +1103,8 @@ export type movimientoUpdateWithoutEmprendimientoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUpdateOneWithoutMovimientoNestedInput
   categoria?: Prisma.categoriaUpdateOneRequiredWithoutMovimientoNestedInput
   metodo_pago?: Prisma.metodo_pagoUpdateOneRequiredWithoutMovimientoNestedInput
@@ -1038,6 +1120,8 @@ export type movimientoUncheckedUpdateWithoutEmprendimientoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateOneWithoutMovimientoNestedInput
 }
 
@@ -1050,6 +1134,8 @@ export type movimientoUncheckedUpdateManyWithoutEmprendimientoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type movimientoCreateManyMetodo_pagoInput = {
@@ -1061,6 +1147,8 @@ export type movimientoCreateManyMetodo_pagoInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoUpdateWithoutMetodo_pagoInput = {
@@ -1069,6 +1157,8 @@ export type movimientoUpdateWithoutMetodo_pagoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUpdateOneWithoutMovimientoNestedInput
   categoria?: Prisma.categoriaUpdateOneRequiredWithoutMovimientoNestedInput
   emprendimiento?: Prisma.emprendimientoUpdateOneWithoutMovimientoNestedInput
@@ -1084,6 +1174,8 @@ export type movimientoUncheckedUpdateWithoutMetodo_pagoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateOneWithoutMovimientoNestedInput
 }
 
@@ -1096,6 +1188,8 @@ export type movimientoUncheckedUpdateManyWithoutMetodo_pagoInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type movimientoCreateManyUsuarioInput = {
@@ -1107,6 +1201,8 @@ export type movimientoCreateManyUsuarioInput = {
   fecha_movimiento: Date | string
   descripcion?: string | null
   fecha_registro: Date | string
+  frecuencia?: string | null
+  es_impulsivo?: boolean
 }
 
 export type movimientoUpdateWithoutUsuarioInput = {
@@ -1115,6 +1211,8 @@ export type movimientoUpdateWithoutUsuarioInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUpdateOneWithoutMovimientoNestedInput
   categoria?: Prisma.categoriaUpdateOneRequiredWithoutMovimientoNestedInput
   emprendimiento?: Prisma.emprendimientoUpdateOneWithoutMovimientoNestedInput
@@ -1130,6 +1228,8 @@ export type movimientoUncheckedUpdateWithoutUsuarioInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
   compra_impulsiva?: Prisma.compra_impulsivaUncheckedUpdateOneWithoutMovimientoNestedInput
 }
 
@@ -1142,6 +1242,8 @@ export type movimientoUncheckedUpdateManyWithoutUsuarioInput = {
   fecha_movimiento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   descripcion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_registro?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  frecuencia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  es_impulsivo?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -1156,6 +1258,8 @@ export type movimientoSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   fecha_movimiento?: boolean
   descripcion?: boolean
   fecha_registro?: boolean
+  frecuencia?: boolean
+  es_impulsivo?: boolean
   compra_impulsiva?: boolean | Prisma.movimiento$compra_impulsivaArgs<ExtArgs>
   categoria?: boolean | Prisma.categoriaDefaultArgs<ExtArgs>
   emprendimiento?: boolean | Prisma.movimiento$emprendimientoArgs<ExtArgs>
@@ -1173,6 +1277,8 @@ export type movimientoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   fecha_movimiento?: boolean
   descripcion?: boolean
   fecha_registro?: boolean
+  frecuencia?: boolean
+  es_impulsivo?: boolean
   categoria?: boolean | Prisma.categoriaDefaultArgs<ExtArgs>
   emprendimiento?: boolean | Prisma.movimiento$emprendimientoArgs<ExtArgs>
   metodo_pago?: boolean | Prisma.metodo_pagoDefaultArgs<ExtArgs>
@@ -1189,6 +1295,8 @@ export type movimientoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   fecha_movimiento?: boolean
   descripcion?: boolean
   fecha_registro?: boolean
+  frecuencia?: boolean
+  es_impulsivo?: boolean
   categoria?: boolean | Prisma.categoriaDefaultArgs<ExtArgs>
   emprendimiento?: boolean | Prisma.movimiento$emprendimientoArgs<ExtArgs>
   metodo_pago?: boolean | Prisma.metodo_pagoDefaultArgs<ExtArgs>
@@ -1205,9 +1313,11 @@ export type movimientoSelectScalar = {
   fecha_movimiento?: boolean
   descripcion?: boolean
   fecha_registro?: boolean
+  frecuencia?: boolean
+  es_impulsivo?: boolean
 }
 
-export type movimientoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id_movimiento" | "id_usuario" | "id_emprendimiento" | "id_categoria" | "id_metodo_pago" | "monto" | "fecha_movimiento" | "descripcion" | "fecha_registro", ExtArgs["result"]["movimiento"]>
+export type movimientoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id_movimiento" | "id_usuario" | "id_emprendimiento" | "id_categoria" | "id_metodo_pago" | "monto" | "fecha_movimiento" | "descripcion" | "fecha_registro" | "frecuencia" | "es_impulsivo", ExtArgs["result"]["movimiento"]>
 export type movimientoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   compra_impulsiva?: boolean | Prisma.movimiento$compra_impulsivaArgs<ExtArgs>
   categoria?: boolean | Prisma.categoriaDefaultArgs<ExtArgs>
@@ -1247,6 +1357,8 @@ export type $movimientoPayload<ExtArgs extends runtime.Types.Extensions.Internal
     fecha_movimiento: Date
     descripcion: string | null
     fecha_registro: Date
+    frecuencia: string | null
+    es_impulsivo: boolean
   }, ExtArgs["result"]["movimiento"]>
   composites: {}
 }
@@ -1684,6 +1796,8 @@ export interface movimientoFieldRefs {
   readonly fecha_movimiento: Prisma.FieldRef<"movimiento", 'DateTime'>
   readonly descripcion: Prisma.FieldRef<"movimiento", 'String'>
   readonly fecha_registro: Prisma.FieldRef<"movimiento", 'DateTime'>
+  readonly frecuencia: Prisma.FieldRef<"movimiento", 'String'>
+  readonly es_impulsivo: Prisma.FieldRef<"movimiento", 'Boolean'>
 }
     
 

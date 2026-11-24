@@ -96,7 +96,7 @@ export default function DashboardScreen() {
             <IconBox icon="chart-donut" size={40} />
             <Txt w="xb" size={18}>Resumen del mes</Txt>
           </View>
-          <Chip label="Septiembre" bg={colors.blueSoft} />
+          <Chip label={new Date().toLocaleDateString('es-BO', { month: 'long' })} bg={colors.blueSoft} />
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
           <Txt w="m" size={13} color={colors.textSoft}>Límite mensual gastado:</Txt>

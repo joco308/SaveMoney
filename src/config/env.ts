@@ -11,6 +11,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL es obligatoria"),
   DIRECT_URL: z.string().min(1, "DIRECT_URL es obligatoria"),
 
+  SUPABASE_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  SUPABASE_PUBLISHABLE_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+
   JWT_SECRET: z.preprocess(
     emptyToUndefined,
     z.string().min(32, "JWT_SECRET debe tener al menos 32 caracteres"),

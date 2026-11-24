@@ -22,7 +22,7 @@ export default function PresupuestoScreen() {
   const pctTotal = d.total > 0 ? Math.round((d.gastado / d.total) * 100) : 0;
   const disponible = d.total - d.gastado;
   const cats = d.categorias.map((c) => ({ ...c, pct: c.limite > 0 ? Math.round((c.gastado / c.limite) * 100) : 0 }));
-  const avisos = cats.filter((c) => c.pct >= 80 || c.pct > 100 || true).slice(0, 3);
+  const avisos = cats.filter((c) => c.pct >= 80).slice(0, 3);
 
   return (
     <Screen>

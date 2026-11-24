@@ -44,6 +44,7 @@ export type UsuarioMinAggregateOutputType = {
   apellidos: string | null
   email: string | null
   hash_contrasena: string | null
+  auth_user_id: string | null
   telefono: string | null
   fecha_nacimiento: Date | null
   activo: boolean | null
@@ -58,6 +59,7 @@ export type UsuarioMaxAggregateOutputType = {
   apellidos: string | null
   email: string | null
   hash_contrasena: string | null
+  auth_user_id: string | null
   telefono: string | null
   fecha_nacimiento: Date | null
   activo: boolean | null
@@ -72,6 +74,7 @@ export type UsuarioCountAggregateOutputType = {
   apellidos: number
   email: number
   hash_contrasena: number
+  auth_user_id: number
   telefono: number
   fecha_nacimiento: number
   activo: number
@@ -98,6 +101,7 @@ export type UsuarioMinAggregateInputType = {
   apellidos?: true
   email?: true
   hash_contrasena?: true
+  auth_user_id?: true
   telefono?: true
   fecha_nacimiento?: true
   activo?: true
@@ -112,6 +116,7 @@ export type UsuarioMaxAggregateInputType = {
   apellidos?: true
   email?: true
   hash_contrasena?: true
+  auth_user_id?: true
   telefono?: true
   fecha_nacimiento?: true
   activo?: true
@@ -126,6 +131,7 @@ export type UsuarioCountAggregateInputType = {
   apellidos?: true
   email?: true
   hash_contrasena?: true
+  auth_user_id?: true
   telefono?: true
   fecha_nacimiento?: true
   activo?: true
@@ -227,6 +233,7 @@ export type UsuarioGroupByOutputType = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id: string | null
   telefono: string | null
   fecha_nacimiento: Date | null
   activo: boolean
@@ -264,6 +271,7 @@ export type usuarioWhereInput = {
   apellidos?: Prisma.StringFilter<"usuario"> | string
   email?: Prisma.StringFilter<"usuario"> | string
   hash_contrasena?: Prisma.StringFilter<"usuario"> | string
+  auth_user_id?: Prisma.UuidNullableFilter<"usuario"> | string | null
   telefono?: Prisma.StringNullableFilter<"usuario"> | string | null
   fecha_nacimiento?: Prisma.DateTimeNullableFilter<"usuario"> | Date | string | null
   activo?: Prisma.BoolFilter<"usuario"> | boolean
@@ -288,6 +296,7 @@ export type usuarioOrderByWithRelationInput = {
   apellidos?: Prisma.SortOrder
   email?: Prisma.SortOrder
   hash_contrasena?: Prisma.SortOrder
+  auth_user_id?: Prisma.SortOrderInput | Prisma.SortOrder
   telefono?: Prisma.SortOrderInput | Prisma.SortOrder
   fecha_nacimiento?: Prisma.SortOrderInput | Prisma.SortOrder
   activo?: Prisma.SortOrder
@@ -307,6 +316,7 @@ export type usuarioOrderByWithRelationInput = {
 export type usuarioWhereUniqueInput = Prisma.AtLeast<{
   id_usuario?: bigint | number
   email?: string
+  auth_user_id?: string
   AND?: Prisma.usuarioWhereInput | Prisma.usuarioWhereInput[]
   OR?: Prisma.usuarioWhereInput[]
   NOT?: Prisma.usuarioWhereInput | Prisma.usuarioWhereInput[]
@@ -329,7 +339,7 @@ export type usuarioWhereUniqueInput = Prisma.AtLeast<{
   sesion_usuario?: Prisma.Sesion_usuarioListRelationFilter
   moneda?: Prisma.XOR<Prisma.MonedaScalarRelationFilter, Prisma.monedaWhereInput>
   perfil_usuario?: Prisma.XOR<Prisma.Perfil_usuarioScalarRelationFilter, Prisma.perfil_usuarioWhereInput>
-}, "id_usuario" | "email">
+}, "id_usuario" | "email" | "auth_user_id">
 
 export type usuarioOrderByWithAggregationInput = {
   id_usuario?: Prisma.SortOrder
@@ -339,6 +349,7 @@ export type usuarioOrderByWithAggregationInput = {
   apellidos?: Prisma.SortOrder
   email?: Prisma.SortOrder
   hash_contrasena?: Prisma.SortOrder
+  auth_user_id?: Prisma.SortOrderInput | Prisma.SortOrder
   telefono?: Prisma.SortOrderInput | Prisma.SortOrder
   fecha_nacimiento?: Prisma.SortOrderInput | Prisma.SortOrder
   activo?: Prisma.SortOrder
@@ -361,6 +372,7 @@ export type usuarioScalarWhereWithAggregatesInput = {
   apellidos?: Prisma.StringWithAggregatesFilter<"usuario"> | string
   email?: Prisma.StringWithAggregatesFilter<"usuario"> | string
   hash_contrasena?: Prisma.StringWithAggregatesFilter<"usuario"> | string
+  auth_user_id?: Prisma.UuidNullableWithAggregatesFilter<"usuario"> | string | null
   telefono?: Prisma.StringNullableWithAggregatesFilter<"usuario"> | string | null
   fecha_nacimiento?: Prisma.DateTimeNullableWithAggregatesFilter<"usuario"> | Date | string | null
   activo?: Prisma.BoolWithAggregatesFilter<"usuario"> | boolean
@@ -373,6 +385,7 @@ export type usuarioCreateInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -397,6 +410,7 @@ export type usuarioUncheckedCreateInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -417,6 +431,7 @@ export type usuarioUpdateInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -441,6 +456,7 @@ export type usuarioUncheckedUpdateInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -463,6 +479,7 @@ export type usuarioCreateManyInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -475,6 +492,7 @@ export type usuarioUpdateManyMutationInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -489,6 +507,7 @@ export type usuarioUncheckedUpdateManyInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -523,6 +542,7 @@ export type usuarioCountOrderByAggregateInput = {
   apellidos?: Prisma.SortOrder
   email?: Prisma.SortOrder
   hash_contrasena?: Prisma.SortOrder
+  auth_user_id?: Prisma.SortOrder
   telefono?: Prisma.SortOrder
   fecha_nacimiento?: Prisma.SortOrder
   activo?: Prisma.SortOrder
@@ -542,6 +562,7 @@ export type usuarioMaxOrderByAggregateInput = {
   apellidos?: Prisma.SortOrder
   email?: Prisma.SortOrder
   hash_contrasena?: Prisma.SortOrder
+  auth_user_id?: Prisma.SortOrder
   telefono?: Prisma.SortOrder
   fecha_nacimiento?: Prisma.SortOrder
   activo?: Prisma.SortOrder
@@ -556,6 +577,7 @@ export type usuarioMinOrderByAggregateInput = {
   apellidos?: Prisma.SortOrder
   email?: Prisma.SortOrder
   hash_contrasena?: Prisma.SortOrder
+  auth_user_id?: Prisma.SortOrder
   telefono?: Prisma.SortOrder
   fecha_nacimiento?: Prisma.SortOrder
   activo?: Prisma.SortOrder
@@ -771,6 +793,7 @@ export type usuarioCreateWithoutAlertaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -794,6 +817,7 @@ export type usuarioUncheckedCreateWithoutAlertaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -829,6 +853,7 @@ export type usuarioUpdateWithoutAlertaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -852,6 +877,7 @@ export type usuarioUncheckedUpdateWithoutAlertaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -871,6 +897,7 @@ export type usuarioCreateWithoutCategoriaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -894,6 +921,7 @@ export type usuarioUncheckedCreateWithoutCategoriaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -929,6 +957,7 @@ export type usuarioUpdateWithoutCategoriaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -952,6 +981,7 @@ export type usuarioUncheckedUpdateWithoutCategoriaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -971,6 +1001,7 @@ export type usuarioCreateWithoutCompra_impulsivaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -994,6 +1025,7 @@ export type usuarioUncheckedCreateWithoutCompra_impulsivaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1029,6 +1061,7 @@ export type usuarioUpdateWithoutCompra_impulsivaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1052,6 +1085,7 @@ export type usuarioUncheckedUpdateWithoutCompra_impulsivaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1071,6 +1105,7 @@ export type usuarioCreateWithoutEmprendimientoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1094,6 +1129,7 @@ export type usuarioUncheckedCreateWithoutEmprendimientoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1129,6 +1165,7 @@ export type usuarioUpdateWithoutEmprendimientoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1152,6 +1189,7 @@ export type usuarioUncheckedUpdateWithoutEmprendimientoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1171,6 +1209,7 @@ export type usuarioCreateWithoutMeta_ahorroInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1194,6 +1233,7 @@ export type usuarioUncheckedCreateWithoutMeta_ahorroInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1229,6 +1269,7 @@ export type usuarioUpdateWithoutMeta_ahorroInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1252,6 +1293,7 @@ export type usuarioUncheckedUpdateWithoutMeta_ahorroInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1271,6 +1313,7 @@ export type usuarioCreateWithoutMonedaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1293,6 +1336,7 @@ export type usuarioUncheckedCreateWithoutMonedaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1344,6 +1388,7 @@ export type usuarioScalarWhereInput = {
   apellidos?: Prisma.StringFilter<"usuario"> | string
   email?: Prisma.StringFilter<"usuario"> | string
   hash_contrasena?: Prisma.StringFilter<"usuario"> | string
+  auth_user_id?: Prisma.UuidNullableFilter<"usuario"> | string | null
   telefono?: Prisma.StringNullableFilter<"usuario"> | string | null
   fecha_nacimiento?: Prisma.DateTimeNullableFilter<"usuario"> | Date | string | null
   activo?: Prisma.BoolFilter<"usuario"> | boolean
@@ -1356,6 +1401,7 @@ export type usuarioCreateWithoutMovimientoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1379,6 +1425,7 @@ export type usuarioUncheckedCreateWithoutMovimientoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1414,6 +1461,7 @@ export type usuarioUpdateWithoutMovimientoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1437,6 +1485,7 @@ export type usuarioUncheckedUpdateWithoutMovimientoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1456,6 +1505,7 @@ export type usuarioCreateWithoutPerfil_usuarioInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1478,6 +1528,7 @@ export type usuarioUncheckedCreateWithoutPerfil_usuarioInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1524,6 +1575,7 @@ export type usuarioCreateWithoutPresupuestoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1547,6 +1599,7 @@ export type usuarioUncheckedCreateWithoutPresupuestoInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1582,6 +1635,7 @@ export type usuarioUpdateWithoutPresupuestoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1605,6 +1659,7 @@ export type usuarioUncheckedUpdateWithoutPresupuestoInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1624,6 +1679,7 @@ export type usuarioCreateWithoutSesion_usuarioInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1647,6 +1703,7 @@ export type usuarioUncheckedCreateWithoutSesion_usuarioInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1682,6 +1739,7 @@ export type usuarioUpdateWithoutSesion_usuarioInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1705,6 +1763,7 @@ export type usuarioUncheckedUpdateWithoutSesion_usuarioInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1725,6 +1784,7 @@ export type usuarioCreateManyMonedaInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1737,6 +1797,7 @@ export type usuarioUpdateWithoutMonedaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1759,6 +1820,7 @@ export type usuarioUncheckedUpdateWithoutMonedaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1780,6 +1842,7 @@ export type usuarioUncheckedUpdateManyWithoutMonedaInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1793,6 +1856,7 @@ export type usuarioCreateManyPerfil_usuarioInput = {
   apellidos: string
   email: string
   hash_contrasena: string
+  auth_user_id?: string | null
   telefono?: string | null
   fecha_nacimiento?: Date | string | null
   activo: boolean
@@ -1805,6 +1869,7 @@ export type usuarioUpdateWithoutPerfil_usuarioInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1827,6 +1892,7 @@ export type usuarioUncheckedUpdateWithoutPerfil_usuarioInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1848,6 +1914,7 @@ export type usuarioUncheckedUpdateManyWithoutPerfil_usuarioInput = {
   apellidos?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   hash_contrasena?: Prisma.StringFieldUpdateOperationsInput | string
+  auth_user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telefono?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fecha_nacimiento?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   activo?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1956,6 +2023,7 @@ export type usuarioSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   apellidos?: boolean
   email?: boolean
   hash_contrasena?: boolean
+  auth_user_id?: boolean
   telefono?: boolean
   fecha_nacimiento?: boolean
   activo?: boolean
@@ -1981,6 +2049,7 @@ export type usuarioSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   apellidos?: boolean
   email?: boolean
   hash_contrasena?: boolean
+  auth_user_id?: boolean
   telefono?: boolean
   fecha_nacimiento?: boolean
   activo?: boolean
@@ -1997,6 +2066,7 @@ export type usuarioSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   apellidos?: boolean
   email?: boolean
   hash_contrasena?: boolean
+  auth_user_id?: boolean
   telefono?: boolean
   fecha_nacimiento?: boolean
   activo?: boolean
@@ -2013,13 +2083,14 @@ export type usuarioSelectScalar = {
   apellidos?: boolean
   email?: boolean
   hash_contrasena?: boolean
+  auth_user_id?: boolean
   telefono?: boolean
   fecha_nacimiento?: boolean
   activo?: boolean
   fecha_registro?: boolean
 }
 
-export type usuarioOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id_usuario" | "id_perfil" | "codigo_moneda" | "nombres" | "apellidos" | "email" | "hash_contrasena" | "telefono" | "fecha_nacimiento" | "activo" | "fecha_registro", ExtArgs["result"]["usuario"]>
+export type usuarioOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id_usuario" | "id_perfil" | "codigo_moneda" | "nombres" | "apellidos" | "email" | "hash_contrasena" | "auth_user_id" | "telefono" | "fecha_nacimiento" | "activo" | "fecha_registro", ExtArgs["result"]["usuario"]>
 export type usuarioInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   alerta?: boolean | Prisma.usuario$alertaArgs<ExtArgs>
   categoria?: boolean | Prisma.usuario$categoriaArgs<ExtArgs>
@@ -2064,6 +2135,7 @@ export type $usuarioPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     apellidos: string
     email: string
     hash_contrasena: string
+    auth_user_id: string | null
     telefono: string | null
     fecha_nacimiento: Date | null
     activo: boolean
@@ -2508,6 +2580,7 @@ export interface usuarioFieldRefs {
   readonly apellidos: Prisma.FieldRef<"usuario", 'String'>
   readonly email: Prisma.FieldRef<"usuario", 'String'>
   readonly hash_contrasena: Prisma.FieldRef<"usuario", 'String'>
+  readonly auth_user_id: Prisma.FieldRef<"usuario", 'String'>
   readonly telefono: Prisma.FieldRef<"usuario", 'String'>
   readonly fecha_nacimiento: Prisma.FieldRef<"usuario", 'DateTime'>
   readonly activo: Prisma.FieldRef<"usuario", 'Boolean'>

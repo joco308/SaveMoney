@@ -1,335 +1,178 @@
-import type {
-  Alerta, Ambito, AporteMeta, Categoria, CompraImpulsiva, Emprendimiento, MetaAhorro,
-  Movimiento, MovimientoVista, NuevoMovimiento, Presupuesto, PresupuestoCategoria, Usuario,
-} from '../types/db';
-import { getSupabase } from './supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Alerta, Categoria, Emprendimiento, NuevoMovimiento, Usuario } from '../types/db';
 
-type Perfil = Pick<Usuario, 'id_usuario' | 'nombres' | 'apellidos' | 'codigo_moneda'>;
-type TipoCategoria = { id_tipo_categoria: number; id_tipo_movimiento: number };
-type TipoMovimiento = { id_tipo_movimiento: number; nombre: string };
-type Pago = { id_metodo_pago: number; nombre: string };
-type MovimientoReal = Movimiento & { frecuencia: 'Fijo' | 'Variable' | null; es_impulsivo: boolean };
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
+const SESSION_KEY = 'savemoney.session.v1';
+type Session = { accessToken: string; refreshToken: string; expiresAt: number; user: Usuario };
+type ApiEnvelope<T> = { success: true; data: T } | { success: false; error?: { message?: string; details?: unknown } };
+let sessionCache: Session | null | undefined;
+let refreshInFlight: Promise<Session> | null = null;
+const listeners = new Set<(session: Session | null) => void>();
+
+async function session(): Promise<Session | null> {
+  if (sessionCache !== undefined) return sessionCache;
+  const raw = await AsyncStorage.getItem(SESSION_KEY);
+  try { sessionCache = raw ? JSON.parse(raw) as Session : null; }
+  catch { sessionCache = null; await AsyncStorage.removeItem(SESSION_KEY); }
+  return sessionCache;
+}
+
+async function setSession(value: Session | null) {
+  sessionCache = value;
+  if (value) await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(value));
+  else await AsyncStorage.removeItem(SESSION_KEY);
+  listeners.forEach((listener) => listener(value));
+}
+
+async function renewSession(current: Session): Promise<Session> {
+  const latest = await session();
+  if (latest && latest.accessToken !== current.accessToken) return latest;
+  if (!refreshInFlight) {
+    refreshInFlight = request<{ accessToken: string; refreshToken: string; expiresIn: number; user: Usuario }>(
+      '/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken: current.refreshToken }) }, false,
+    ).then(async (renewed) => {
+      const next = { ...current, ...renewed, expiresAt: Date.now() + renewed.expiresIn * 1000 };
+      await setSession(next);
+      return next;
+    }).finally(() => { refreshInFlight = null; });
+  }
+  const pending = refreshInFlight;
+  if (!pending) throw new Error('No se pudo renovar la sesión.');
+  return pending;
+}
+
+function apiUrl(path: string) {
+  if (!BASE_URL) throw new Error('Configura EXPO_PUBLIC_API_URL con la URL HTTPS de tu backend en mobile/.env.local.');
+  if (!BASE_URL.startsWith('https://')) throw new Error('EXPO_PUBLIC_API_URL debe usar HTTPS.');
+  return `${BASE_URL}/api/v1${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+async function request<T>(path: string, init: RequestInit = {}, authenticated = true): Promise<T> {
+  const current = authenticated ? await session() : null;
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+  if (init.body) headers.set('Content-Type', 'application/json');
+  if (current?.accessToken) headers.set('Authorization', `Bearer ${current.accessToken}`);
+  let response: Response;
+  try { response = await fetch(apiUrl(path), { ...init, headers }); }
+  catch { throw new Error('No se pudo conectar con SaveMoney. Comprueba tu conexión y la URL del servidor.'); }
+  if (response.status === 401 && current?.refreshToken && path !== '/auth/refresh') {
+    try {
+      const next = await renewSession(current);
+      headers.set('Authorization', `Bearer ${next.accessToken}`);
+      response = await fetch(apiUrl(path), { ...init, headers });
+    } catch { await setSession(null); throw new Error('Tu sesión venció. Inicia sesión nuevamente.'); }
+  }
+  if (response.status === 401 && current) await setSession(null);
+  let payload: ApiEnvelope<T> | undefined;
+  try { payload = await response.json() as ApiEnvelope<T>; } catch { /* handled below */ }
+  if (!response.ok || !payload || !payload.success) {
+    const error = payload && !payload.success ? payload.error : undefined;
+    throw new Error(error?.message || `Error del servidor (${response.status}).`);
+  }
+  return payload.data;
+}
+
+function query(values: Record<string, string | number | undefined>) {
+  const params = new URLSearchParams();
+  Object.entries(values).forEach(([key, value]) => { if (value !== undefined) params.set(key, String(value)); });
+  const text = params.toString();
+  return text ? `?${text}` : '';
+}
+
+async function all<T>(path: string, key: string, params: Record<string, string | number | undefined> = {}): Promise<T[]> {
+  const pageSize = 100;
+  const first = await request<Record<string, unknown>>(`${path}${query({ ...params, page: 1, limit: pageSize })}`);
+  const rows = (first[key] as T[] | undefined) ?? [];
+  const pages = (first.paginacion as { totalPaginas?: number } | undefined)?.totalPaginas ?? 1;
+  if (pages <= 1) return rows;
+  const rest = await Promise.all(Array.from({ length: pages - 1 }, (_, index) =>
+    request<Record<string, unknown>>(`${path}${query({ ...params, page: index + 2, limit: pageSize })}`),
+  ));
+  return rows.concat(...rest.map((result) => (result[key] as T[] | undefined) ?? []));
+}
+
+export const auth = {
+  subscribe(listener: (value: Session | null) => void) { listeners.add(listener); return () => listeners.delete(listener); },
+  current: session,
+  async login(email: string, password: string) {
+    const result = await request<{ accessToken: string; refreshToken: string; expiresIn: number; user: Usuario }>(
+      '/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, false,
+    );
+    await setSession({ ...result, expiresAt: Date.now() + result.expiresIn * 1000 });
+  },
+  async register(input: { nombres: string; apellidos: string; email: string; password: string }) {
+    const result = await request<{ accessToken: string; refreshToken: string; expiresIn: number; user: Usuario }>(
+      '/auth/register', { method: 'POST', body: JSON.stringify({ ...input, codigo_moneda: 'BOB' }) }, false,
+    );
+    await setSession({ ...result, expiresAt: Date.now() + result.expiresIn * 1000 });
+  },
+  async logout() {
+    const current = await session();
+    try { if (current) await request('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken: current.refreshToken }) }); }
+    finally { await setSession(null); }
+  },
+};
 
 export function fechaLocal(d = new Date()) {
   return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
 }
+const periodo = (year: number, month: number) => ({ inicio: fechaLocal(new Date(year, month - 1, 1)), fin: fechaLocal(new Date(year, month, 0)), etiqueta: new Date(year, month - 1, 1).toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }) });
+const actual = () => periodo(new Date().getFullYear(), new Date().getMonth() + 1);
+const number = (value: unknown) => Number(value ?? 0);
 
-function periodo(anio: number, mes: number) {
-  const fecha = new Date(anio, mes - 1, 1);
-  return {
-    inicio: fechaLocal(fecha),
-    fin: fechaLocal(new Date(anio, mes, 1)),
-    etiqueta: fecha.toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }),
-  };
+type RawMovimiento = { id_movimiento: number | string; id_categoria: number; id_emprendimiento?: number | string | null; monto: number | string; fecha_movimiento: string; fecha_registro?: string | null; descripcion?: string | null; categoria?: { nombre: string; tipo_categoria?: { tipo_movimiento?: { nombre: string } } }; frecuencia?: 'Fijo' | 'Variable' | null; es_impulsivo?: boolean };
+type RawCategoria = Categoria & { tipo_categoria?: { tipo_movimiento?: { nombre: string } } };
+const palette = ['#3882F6', '#45BE91', '#F6A755', '#9078D0', '#EE7496'];
+async function loadMovements(from?: string, to?: string) {
+  const rows = await all<RawMovimiento>('/movimientos', 'movimientos', { fecha_desde: from, fecha_hasta: to });
+  return rows.map((m) => ({ ...m, id_movimiento: Number(m.id_movimiento), id_categoria: Number(m.id_categoria), id_emprendimiento: m.id_emprendimiento == null ? null : Number(m.id_emprendimiento), monto: number(m.monto) }));
 }
-
-function mesActual(offset = 0) {
-  const d = new Date();
-  return periodo(d.getFullYear(), d.getMonth() + 1 + offset);
+async function loadCategories() {
+  return (await all<RawCategoria>('/categorias', 'categorias')).map((c) => ({ ...c, tipo: c.tipo_categoria?.tipo_movimiento?.nombre === 'Ingreso' ? 'Ingreso' as const : 'Gasto' as const, icono: c.tipo_categoria?.tipo_movimiento?.nombre === 'Ingreso' ? 'trending-up' : 'tag-outline' }));
 }
-
-function dentro(fecha: string, p: ReturnType<typeof periodo>) {
-  return fecha >= p.inicio && fecha < p.fin;
+const sum = <T,>(items: T[], fn: (item: T) => number) => items.reduce((total, item) => total + Math.round(fn(item) * 100), 0) / 100;
+function viewMovements(rows: RawMovimiento[], categories: Awaited<ReturnType<typeof loadCategories>>) {
+  const byId = new Map(categories.map((c) => [c.id_categoria, c]));
+  return rows.map((m) => { const c = byId.get(Number(m.id_categoria)); const income = c?.tipo === 'Ingreso'; return {
+    id: Number(m.id_movimiento), id_movimiento: Number(m.id_movimiento), id_categoria: Number(m.id_categoria), id_emprendimiento: m.id_emprendimiento == null ? null : Number(m.id_emprendimiento),
+    fecha_movimiento: m.fecha_movimiento.slice(0, 10), fecha_registro: m.fecha_registro ?? '', monto: (income ? 1 : -1) * number(m.monto), tipo: income ? 'Ingreso' as const : 'Gasto' as const,
+    titulo: m.descripcion || c?.nombre || 'Movimiento', categoria: c?.nombre ?? 'Sin categoría', detalle: [c?.nombre, m.fecha_movimiento.slice(0, 10)].filter(Boolean).join(' · '), icono: c?.icono ?? 'wallet-outline', frecuencia: m.frecuencia ?? 'Variable', es_impulsivo: Boolean(m.es_impulsivo),
+  }; });
 }
-
-async function filas<T>(consulta: (inicio: number, fin: number) => PromiseLike<{
-  data: T[] | null;
-  error: { message: string } | null;
-}>) {
-  const resultado: T[] = [];
-  const pagina = 500;
-  for (let inicio = 0; ; inicio += pagina) {
-    const { data, error } = await consulta(inicio, inicio + pagina - 1);
-    if (error) throw new Error(error.message);
-    resultado.push(...(data ?? []));
-    if ((data?.length ?? 0) < pagina) return resultado;
-  }
-}
-
-export async function perfilActual(): Promise<Perfil> {
-  const db = getSupabase();
-  const leer = () => db.from('usuario').select('id_usuario,nombres,apellidos,codigo_moneda').maybeSingle<Perfil>();
-  const perfil = await leer();
-  if (perfil.error) throw new Error(perfil.error.message);
-  if (perfil.data) return perfil.data;
-
-  const { error } = await db.rpc('mobile_crear_perfil');
-  if (error) throw new Error(error.message);
-  const nuevo = await leer();
-  if (nuevo.error) throw new Error(nuevo.error.message);
-  if (!nuevo.data) throw new Error('Tu perfil de SaveMoney no está activo.');
-  return nuevo.data;
-}
-
-async function categorias() {
-  const db = getSupabase();
-  const [lista, tipos, movimientos] = await Promise.all([
-    filas<Categoria>((a, b) => db.from('categoria').select('*').order('id_categoria').range(a, b)),
-    filas<TipoCategoria>((a, b) => db.from('tipo_categoria').select('id_tipo_categoria,id_tipo_movimiento').order('id_tipo_categoria').range(a, b)),
-    filas<TipoMovimiento>((a, b) => db.from('tipo_movimiento').select('id_tipo_movimiento,nombre').order('id_tipo_movimiento').range(a, b)),
-  ]);
-  const nombres = new Map(movimientos.map((tipo) => [tipo.id_tipo_movimiento, tipo.nombre]));
-  const tipoPorId = new Map(tipos.map((tipo) => [tipo.id_tipo_categoria, nombres.get(tipo.id_tipo_movimiento)]));
-  return lista.map((c) => ({
-    ...c,
-    tipo: tipoPorId.get(c.id_tipo_categoria) === 'Ingreso' ? 'Ingreso' as const : 'Gasto' as const,
-    icono: tipoPorId.get(c.id_tipo_categoria) === 'Ingreso' ? 'trending-up' : 'tag-outline',
-  }));
-}
-
-function pagos() {
-  const db = getSupabase();
-  return filas<Pago>((a, b) => db.from('metodo_pago').select('id_metodo_pago,nombre').order('id_metodo_pago').range(a, b));
-}
-
-function negocios() {
-  const db = getSupabase();
-  return filas<Emprendimiento>((a, b) => db.from('emprendimiento').select('*').order('id_emprendimiento').range(a, b));
-}
-
-function movimientos(inicio: string, fin: string) {
-  const db = getSupabase();
-  return filas<MovimientoReal>((a, b) => db.from('movimiento').select('*')
-    .gte('fecha_movimiento', inicio).lt('fecha_movimiento', fin)
-    .order('fecha_movimiento', { ascending: false }).order('id_movimiento', { ascending: false }).range(a, b));
-}
-
-function aportes() {
-  const db = getSupabase();
-  return filas<AporteMeta>((a, b) => db.from('aporte_meta').select('*').order('id_aporte').range(a, b));
-}
-
-function presupuestos(anio: number, mes: number) {
-  const db = getSupabase();
-  return filas<Presupuesto>((a, b) => db.from('presupuesto').select('*').eq('anio', anio).eq('mes', mes)
-    .order('id_presupuesto', { ascending: false }).range(a, b));
-}
-
-type CategoriaReal = Awaited<ReturnType<typeof categorias>>[number];
-
-type MovimientoConVista = MovimientoVista & Omit<MovimientoReal, 'monto' | 'frecuencia'>;
-
-function vistas(datos: MovimientoReal[], cats: CategoriaReal[]): MovimientoConVista[] {
-  const porId = new Map(cats.map((cat) => [cat.id_categoria, cat]));
-  return datos.map((mov) => {
-    const cat = porId.get(mov.id_categoria);
-    const tipo = cat?.tipo ?? 'Gasto';
-    return {
-      ...mov,
-      id: mov.id_movimiento,
-      titulo: mov.descripcion || cat?.nombre || 'Movimiento',
-      detalle: [cat?.nombre, mov.fecha_movimiento].filter(Boolean).join(' · '),
-      monto: (tipo === 'Ingreso' ? 1 : -1) * Number(mov.monto),
-      tipo,
-      icono: cat?.icono ?? 'wallet-outline',
-      frecuencia: mov.frecuencia ?? undefined,
-    };
-  });
-}
-
-const suma = <T,>(items: T[], monto: (item: T) => number) =>
-  items.reduce((centavos, item) => centavos + Math.round(monto(item) * 100), 0) / 100;
-const pct = (valor: number, total: number) => total ? Math.round(100 * valor / total) : 0;
-const gastos = <T extends MovimientoVista,>(items: T[]) => items.filter((item) => item.tipo === 'Gasto');
-
-const paleta = ['#3882F6', '#45BE91', '#F6A755', '#9078D0', '#EE7496'];
-
-function grupos(items: MovimientoConVista[], cats: CategoriaReal[]) {
-  const resumen = new Map<number, { monto: number; compras: number }>();
-  for (const item of items) {
-    const grupo = resumen.get(item.id_categoria) ?? { monto: 0, compras: 0 };
-    grupo.monto += Math.round(Math.abs(item.monto) * 100);
-    grupo.compras++;
-    resumen.set(item.id_categoria, grupo);
-  }
-  const total = [...resumen.values()].reduce((n, g) => n + g.monto, 0);
-  const porId = new Map(cats.map((c) => [c.id_categoria, c]));
-  return [...resumen.entries()].sort(([, a], [, b]) => b.monto - a.monto).map(([id, grupo], i) => ({
-    nombre: porId.get(id)?.nombre ?? 'Categoría',
-    icono: porId.get(id)?.icono ?? 'tag-outline',
-    monto: grupo.monto / 100,
-    compras: grupo.compras,
-    pct: pct(grupo.monto, total),
-    color: paleta[i % paleta.length],
-  }));
-}
-
-function totales(items: MovimientoVista[]) {
-  return {
-    ingresos: suma(items.filter((m) => m.tipo === 'Ingreso'), (m) => m.monto),
-    gastos: suma(gastos(items), (m) => -m.monto),
-  };
-}
-
-function porFrecuencia(items: MovimientoVista[]) {
-  return {
-    fijos: suma(gastos(items).filter((m) => m.frecuencia === 'Fijo'), (m) => -m.monto),
-    variables: suma(gastos(items).filter((m) => m.frecuencia === 'Variable'), (m) => -m.monto),
-  };
+function group(rows: ReturnType<typeof viewMovements>) {
+  const values = new Map<string, { monto: number; compras: number }>();
+  rows.forEach((r) => { const item = values.get(r.categoria) ?? { monto: 0, compras: 0 }; item.monto += Math.round(Math.abs(r.monto) * 100); item.compras++; values.set(r.categoria, item); });
+  const total = [...values.values()].reduce((sum, item) => sum + item.monto, 0);
+  return [...values.entries()].sort((a, b) => b[1].monto - a[1].monto).map(([nombre, item], i) => ({ nombre, icono: rows.find((r) => r.categoria === nombre)?.icono ?? 'tag-outline', monto: item.monto / 100, compras: item.compras, pct: total ? Math.round(item.monto * 100 / total) : 0, color: palette[i % palette.length] }));
 }
 
 export const api = {
-  getPerfil: perfilActual,
-  getCategorias: categorias,
-  getMetodos: pagos,
-  getEmprendimientos: async () => (await negocios()).filter((e) => e.activo),
-  async getDashboard() {
-    const hoy = new Date();
-    const actual = mesActual();
-    const [perfil, cats, datos, aportesMeta, planes] = await Promise.all([
-      perfilActual(), categorias(), movimientos(actual.inicio, actual.fin), aportes(),
-      presupuestos(hoy.getFullYear(), hoy.getMonth() + 1),
-    ]);
-    const recientes = vistas(datos, cats);
-    const { ingresos, gastos: gasto } = totales(recientes);
-    const ahorro = suma(aportesMeta.filter((a) => dentro(a.fecha_aporte, actual)), (a) => Number(a.monto));
-    return {
-      nombre: perfil.nombres,
-      moneda: perfil.codigo_moneda,
-      disponible: ingresos - gasto - ahorro,
-      ingresos, gastos: gasto, ahorro,
-      limiteMensual: suma(planes, (p) => Number(p.monto_total)),
-      distribucion: grupos(recientes.filter((m) => m.tipo === 'Gasto'), cats),
-      recientes: recientes.slice(0, 8),
-    };
-  },
-  async getNegocio(ambito: Ambito | 'Todos' = 'Todos') {
-    const hoy = new Date();
-    const actual = mesActual();
-    const [cats, datos, empresas, planes] = await Promise.all([
-      categorias(), movimientos(actual.inicio, actual.fin), negocios(), presupuestos(hoy.getFullYear(), hoy.getMonth() + 1),
-    ]);
-    const lista = vistas(datos, cats);
-    const filtro = lista.filter((m) => ambito === 'Todos' || (ambito === 'Negocio') === (m.id_emprendimiento != null));
-    const activos = empresas.filter((e) => e.activo);
-    return {
-      personal: suma(gastos(lista).filter((m) => m.id_emprendimiento == null), (m) => -m.monto),
-      negocio: suma(gastos(lista).filter((m) => m.id_emprendimiento != null), (m) => -m.monto),
-      nombreNegocio: activos.map((e) => e.nombre).join(', ') || 'Sin emprendimientos',
-      ...porFrecuencia(filtro),
-      negocios: activos.map((e) => ({
-        id: e.id_emprendimiento, nombre: e.nombre, categoria: e.descripcion ?? '',
-        limite: suma(planes.filter((p) => p.id_emprendimiento === e.id_emprendimiento), (p) => Number(p.monto_total)),
-      })),
-      movimientos: filtro,
-    };
-  },
-  async getPresupuesto(anio = new Date().getFullYear(), mes = new Date().getMonth() + 1) {
-    const db = getSupabase();
-    const actual = periodo(anio, mes);
-    const [planes, cats, datos] = await Promise.all([presupuestos(anio, mes), categorias(), movimientos(actual.inicio, actual.fin)]);
-    const plan = planes.find((p) => p.id_emprendimiento == null);
-    const limites = plan ? await filas<PresupuestoCategoria>((a, b) => db.from('presupuesto_categoria').select('*')
-      .eq('id_presupuesto', plan.id_presupuesto).order('id_limite').range(a, b)) : [];
-    const egresos = vistas(datos, cats).filter((m) => m.tipo === 'Gasto' && m.id_emprendimiento == null);
-    return {
-      mesLabel: actual.etiqueta,
-      total: Number(plan?.monto_total ?? 0),
-      gastado: suma(egresos, (m) => -m.monto),
-      categorias: limites.map((limite) => {
-        const cat = cats.find((c) => c.id_categoria === limite.id_categoria);
-        return {
-          id_categoria: limite.id_categoria, nombre: cat?.nombre ?? 'Categoría', icono: cat?.icono ?? 'tag-outline',
-          gastado: suma(egresos.filter((m) => m.id_categoria === limite.id_categoria), (m) => -m.monto),
-          limite: Number(limite.monto_limite),
-        };
-      }),
-      umbrales: plan ? [{ pct: plan.umbral_alerta_pct, activo: true }] : [],
-    };
-  },
-  async getMetas() {
-    const db = getSupabase();
-    const [metas, aportesMeta] = await Promise.all([
-      filas<MetaAhorro>((a, b) => db.from('meta_ahorro').select('*').order('id_meta').range(a, b)), aportes(),
-    ]);
-    const fechas = [-3, -2, -1, 0].map(mesActual);
-    return {
-      totalAcumulado: suma(aportesMeta, (a) => Number(a.monto)),
-      objetivoGlobal: suma(metas, (m) => Number(m.monto_objetivo)),
-      rendimientoMensual: suma(aportesMeta.filter((a) => dentro(a.fecha_aporte, mesActual())), (a) => Number(a.monto)),
-      metas: metas.map((m) => ({
-        id_meta: m.id_meta, nombre: m.nombre, icono: 'target',
-        objetivo: Number(m.monto_objetivo),
-        ahorrado: suma(aportesMeta.filter((a) => a.id_meta === m.id_meta), (a) => Number(a.monto)),
-        sugerencia: m.descripcion || '', recordatorio: 'Fecha límite: ' + m.fecha_limite, recordatorioActivo: false,
-      })),
-      proyeccion: fechas.map((p) => ({
-        label: p.etiqueta, valor: suma(aportesMeta.filter((a) => dentro(a.fecha_aporte, p)), (a) => Number(a.monto)),
-        etiqueta: p.etiqueta.split(' ')[0],
-      })),
-    };
-  },
-  async getImpulsivas() {
-    const db = getSupabase();
-    const actual = mesActual();
-    const anterior = mesActual(-1);
-    const [cats, datos, compras] = await Promise.all([
-      categorias(), movimientos(anterior.inicio, actual.fin),
-      filas<CompraImpulsiva>((a, b) => db.from('compra_impulsiva').select('*').order('id_compra_impulsiva').range(a, b)),
-    ]);
-    const ids = new Set(compras.flatMap((c) => c.id_movimiento == null ? [] : [c.id_movimiento]));
-    const egresos = vistas(datos, cats).filter((m) => m.tipo === 'Gasto');
-    const impulsos = egresos.filter((m) => m.es_impulsivo || ids.has(m.id_movimiento));
-    const actuales = impulsos.filter((m) => dentro(m.fecha_movimiento, actual));
-    const total = suma(actuales, (m) => -m.monto);
-    const previo = suma(impulsos.filter((m) => dentro(m.fecha_movimiento, anterior)), (m) => -m.monto);
-    return {
-      mes: actual.etiqueta, total, compras: actuales.length,
-      impactoPct: pct(total, suma(egresos.filter((m) => dentro(m.fecha_movimiento, actual)), (m) => -m.monto)),
-      variacionPct: pct(total - previo, previo),
-      categorias: grupos(actuales, cats),
-      compras24h: actuales.filter((m) => Date.parse(m.fecha_registro.endsWith('Z') ? m.fecha_registro : m.fecha_registro + 'Z') >= Date.now() - 86400000).length,
-    };
-  },
-  async getResumen() {
-    const actual = mesActual();
-    const previo = mesActual(-1);
-    const [cats, datos, aportesMeta] = await Promise.all([categorias(), movimientos(previo.inicio, actual.fin), aportes()]);
-    const lista = vistas(datos, cats);
-    const actuales = lista.filter((m) => dentro(m.fecha_movimiento, actual));
-    const antes = lista.filter((m) => dentro(m.fecha_movimiento, previo));
-    const ahorro = (p: ReturnType<typeof periodo>) => suma(aportesMeta.filter((a) => dentro(a.fecha_aporte, p)), (a) => Number(a.monto));
-    const actualTotales = { ...totales(actuales), ahorro: ahorro(actual) };
-    const anterior = { ...totales(antes), ahorro: ahorro(previo) };
-    const variacion = (valor: number, antes: number) => ({ valor, var: pct(valor - antes, antes) });
-    return {
-      ingresos: variacion(actualTotales.ingresos, anterior.ingresos),
-      gastos: variacion(actualTotales.gastos, anterior.gastos),
-      ahorro: variacion(actualTotales.ahorro, anterior.ahorro),
-      anterior, balanceNeto: actualTotales.ingresos - actualTotales.gastos - actualTotales.ahorro,
-      ...porFrecuencia(actuales),
-      mayorVariable: grupos(actuales.filter((m) => m.tipo === 'Gasto' && m.frecuencia === 'Variable'), cats)[0] ?? { nombre: 'Sin gastos variables', monto: 0, pct: 0 },
-      categorias: grupos(actuales.filter((m) => m.tipo === 'Gasto'), cats),
-    };
-  },
-  getAlertas() {
-    const db = getSupabase();
-    return filas<Alerta>((a, b) => db.from('alerta').select('*').order('fecha_generacion', { ascending: false })
-      .order('id_alerta', { ascending: false }).range(a, b));
-  },
-  async marcarAlerta(id: number) {
-    const { error } = await getSupabase().from('alerta').update({ fecha_lectura: new Date().toISOString() })
-      .eq('id_alerta', id).is('fecha_lectura', null);
-    if (error) throw new Error(error.message);
-  },
-  async createMovimiento(m: NuevoMovimiento) {
-    if (!Number.isFinite(m.monto) || m.monto <= 0 || !/^\d{1,12}(\.\d{1,2})?$/.test(String(m.monto))) {
-      throw new Error('Ingresa un monto positivo con hasta dos decimales.');
-    }
-    const [perfil, cats] = await Promise.all([perfilActual(), categorias()]);
-    if (!cats.some((c) => c.id_categoria === m.id_categoria && c.tipo === m.tipo && c.activa)) {
-      throw new Error('Selecciona una categoría activa para este tipo de movimiento.');
-    }
-    if (!m.id_metodo_pago) throw new Error('Selecciona un método de pago.');
+  getPerfil: async () => { const user = await request<Usuario>('/me'); return { ...user, id_usuario: Number(user.id_usuario) }; },
+  getCategorias: loadCategories,
+  getMetodos: async () => { const data = await request<{ metodos_pago: { id_metodo_pago: number; nombre: string }[] }>('/catalogos'); return data.metodos_pago; },
+  getEmprendimientos: async () => all<Emprendimiento>('/emprendimientos', 'emprendimientos', { activo: 'true' }),
+  createMovimiento: async (m: NuevoMovimiento) => {
+    if (!Number.isFinite(m.monto) || m.monto <= 0 || !m.id_categoria || !m.id_metodo_pago) throw new Error('Completa un monto, una categoría y un método de pago válidos.');
     if (m.ambito === 'Negocio' && !m.id_emprendimiento) throw new Error('Selecciona un emprendimiento.');
-    const { error } = await getSupabase().from('movimiento').insert({
-      id_usuario: perfil.id_usuario,
-      id_emprendimiento: m.ambito === 'Negocio' ? m.id_emprendimiento : null,
-      id_categoria: m.id_categoria, id_metodo_pago: m.id_metodo_pago, monto: m.monto,
-      fecha_movimiento: m.fecha, descripcion: m.nota?.trim() || null, fecha_registro: new Date().toISOString(),
-      frecuencia: m.frecuencia, es_impulsivo: m.tipo === 'Gasto' && Boolean(m.impulsivo),
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true as const };
+    return request('/movimientos', { method: 'POST', body: JSON.stringify({ id_categoria: m.id_categoria, id_metodo_pago: m.id_metodo_pago, id_emprendimiento: m.ambito === 'Negocio' ? m.id_emprendimiento : undefined, monto: m.monto, fecha_movimiento: m.fecha, descripcion: m.nota?.trim() || undefined, frecuencia: m.frecuencia, es_impulsivo: m.tipo === 'Gasto' && Boolean(m.impulsivo) }) });
   },
+  async getDashboard() {
+    const p = actual();
+    const [perfil, cats, rows, budgets, goals] = await Promise.all([
+      api.getPerfil(), loadCategories(), loadMovements(p.inicio, p.fin),
+      all<any>('/presupuestos', 'presupuestos', { anio: new Date().getFullYear(), mes: new Date().getMonth() + 1 }),
+      all<any>('/metas-ahorro', 'metas'),
+    ]);
+    const contributions = (await Promise.all(goals.map((g) => all<any>(`/metas-ahorro/${g.id_meta}/aportes`, 'aportes')))).flat();
+    const views = viewMovements(rows, cats); const incomes = sum(views.filter((m) => m.tipo === 'Ingreso'), (m) => m.monto); const expenses = sum(views.filter((m) => m.tipo === 'Gasto'), (m) => -m.monto); const savings = sum(contributions.filter((a) => String(a.fecha_aporte).slice(0, 7) === p.inicio.slice(0, 7)), (a) => number(a.monto));
+    return { nombre: perfil.nombres, moneda: perfil.codigo_moneda, disponible: incomes - expenses - savings, ingresos: incomes, gastos: expenses, ahorro: savings, limiteMensual: sum(budgets, (b) => number(b.monto_total)), distribucion: group(views.filter((m) => m.tipo === 'Gasto')), recientes: views.slice(0, 8) };
+  },
+  async getNegocio(ambito: 'Todos' | 'Personal' | 'Negocio' = 'Todos') { const p = actual(); const [cats, rows, businesses] = await Promise.all([loadCategories(), loadMovements(p.inicio, p.fin), api.getEmprendimientos()]); const views = viewMovements(rows, cats); const expense = views.filter((m) => m.tipo === 'Gasto'); const filtered = views.filter((m) => ambito === 'Todos' || (ambito === 'Negocio') === (m.id_emprendimiento != null)); return { personal: sum(expense.filter((m) => !m.id_emprendimiento), (m) => -m.monto), negocio: sum(expense.filter((m) => m.id_emprendimiento), (m) => -m.monto), nombreNegocio: businesses.map((b) => b.nombre).join(', ') || 'Sin emprendimientos', fijos: sum(filtered.filter((m) => m.tipo === 'Gasto' && m.frecuencia === 'Fijo'), (m) => -m.monto), variables: sum(filtered.filter((m) => m.tipo === 'Gasto' && m.frecuencia !== 'Fijo'), (m) => -m.monto), negocios: businesses.map((b) => ({ id: Number(b.id_emprendimiento), nombre: b.nombre, categoria: b.descripcion ?? '', limite: 0 })), movimientos: filtered }; },
+  async getPresupuesto(year = new Date().getFullYear(), month = new Date().getMonth() + 1) { const p = periodo(year, month); const [plans, cats, rows] = await Promise.all([all<any>('/presupuestos', 'presupuestos', { anio: year, mes: month }), loadCategories(), loadMovements(p.inicio, p.fin)]); const plan = plans.find((item) => !item.id_emprendimiento); const limits = plan ? await all<any>(`/presupuestos/${plan.id_presupuesto}/categorias`, 'registros') : []; const views = viewMovements(rows, cats).filter((m) => m.tipo === 'Gasto' && !m.id_emprendimiento); return { mesLabel: p.etiqueta, total: number(plan?.monto_total), gastado: sum(views, (m) => -m.monto), categorias: limits.map((l) => { const cat = cats.find((c) => c.id_categoria === Number(l.id_categoria)); return { id_categoria: Number(l.id_categoria), nombre: cat?.nombre ?? 'Categoría', icono: cat?.icono ?? 'tag-outline', gastado: sum(views.filter((m) => m.id_categoria === Number(l.id_categoria)), (m) => -m.monto), limite: number(l.monto_limite) }; }), umbrales: plan ? [{ pct: number(plan.umbral_alerta_pct), activo: true }] : [] }; },
+  async getMetas() { const metas = await all<any>('/metas-ahorro', 'metas'); const contributions = (await Promise.all(metas.map((m) => all<any>(`/metas-ahorro/${m.id_meta}/aportes`, 'aportes')))).flat(); const p = actual(); const byGoal = (id: number) => contributions.filter((a) => Number(a.id_meta) === Number(id)); const history = await Promise.all([-3, -2, -1, 0].map(async (offset) => { const date = new Date(); date.setDate(1); date.setMonth(date.getMonth() + offset); const month = fechaLocal(date).slice(0, 7); const total = sum(contributions.filter((a) => String(a.fecha_aporte).slice(0, 7) === month), (a) => number(a.monto)); return { label: date.toLocaleDateString('es-BO', { month: 'short' }), etiqueta: date.toLocaleDateString('es-BO', { month: 'short' }), valor: total }; })); return { totalAcumulado: sum(contributions, (a) => number(a.monto)), objetivoGlobal: sum(metas, (m) => number(m.monto_objetivo)), rendimientoMensual: sum(contributions.filter((a) => String(a.fecha_aporte).slice(0, 7) === p.inicio.slice(0, 7)), (a) => number(a.monto)), metas: metas.map((m) => ({ id_meta: Number(m.id_meta), nombre: m.nombre, icono: 'target', objetivo: number(m.monto_objetivo), ahorrado: sum(byGoal(m.id_meta), (a) => number(a.monto)), sugerencia: m.descripcion ?? '', recordatorio: `Fecha límite: ${String(m.fecha_limite).slice(0, 10)}`, recordatorioActivo: false })), proyeccion: history, racha: 0 }; },
+  async getImpulsivas() { const p = actual(); const prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1); const prev = periodo(prevDate.getFullYear(), prevDate.getMonth() + 1); const [cats, rows, purchases] = await Promise.all([loadCategories(), loadMovements(prev.inicio, p.fin), all<any>('/compras-impulsivas', 'compras')]); const linked = new Set(purchases.map((item) => Number(item.id_movimiento)).filter(Number.isFinite)); const allViews = viewMovements(rows, cats); const impulses = allViews.filter((m) => m.tipo === 'Gasto' && (m.es_impulsivo || linked.has(m.id_movimiento))); const thisMonth = impulses.filter((m) => m.fecha_movimiento >= p.inicio); const lastMonth = impulses.filter((m) => m.fecha_movimiento >= prev.inicio && m.fecha_movimiento < p.inicio); const total = sum(thisMonth, (m) => -m.monto); const prior = sum(lastMonth, (m) => -m.monto); const costs = sum(allViews.filter((m) => m.tipo === 'Gasto' && m.fecha_movimiento >= p.inicio), (m) => -m.monto); const dateLabel = new Date().toLocaleDateString('es-BO', { month: 'long', year: 'numeric' }); const dayAgo = Date.now() - 86400000; const compras24h = thisMonth.filter((m) => m.fecha_registro && Date.parse(m.fecha_registro) >= dayAgo).length; return { mes: dateLabel, total, compras: thisMonth.length, impactoPct: costs ? Math.round(total * 100 / costs) : 0, variacionPct: prior ? Math.round((total - prior) * 100 / prior) : 0, limite: 0, diasRestantes: 0, categorias: group(thisMonth), compras24h }; },
+  async getResumen() { const p = actual(); const d = new Date(); d.setMonth(d.getMonth() - 1); const prev = periodo(d.getFullYear(), d.getMonth() + 1); const [cats, rows, goals] = await Promise.all([loadCategories(), loadMovements(prev.inicio, p.fin), all<any>('/metas-ahorro', 'metas')]); const contributions = (await Promise.all(goals.map((g) => all<any>(`/metas-ahorro/${g.id_meta}/aportes`, 'aportes')))).flat(); const views = viewMovements(rows, cats); const curr = views.filter((m) => m.fecha_movimiento >= p.inicio); const old = views.filter((m) => m.fecha_movimiento >= prev.inicio && m.fecha_movimiento < p.inicio); const save = (month: string) => sum(contributions.filter((a) => String(a.fecha_aporte).slice(0, 7) === month), (a) => number(a.monto)); const totals = (list: typeof curr) => ({ ingresos: sum(list.filter((m) => m.tipo === 'Ingreso'), (m) => m.monto), gastos: sum(list.filter((m) => m.tipo === 'Gasto'), (m) => -m.monto) }); const c = totals(curr); const o = totals(old); const pct = (now: number, before: number) => before ? Math.round((now - before) * 100 / before) : 0; const variable = group(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia !== 'Fijo')); return { ingresos: { valor: c.ingresos, var: pct(c.ingresos, o.ingresos) }, gastos: { valor: c.gastos, var: pct(c.gastos, o.gastos) }, ahorro: { valor: save(p.inicio.slice(0, 7)), var: pct(save(p.inicio.slice(0, 7)), save(prev.inicio.slice(0, 7))) }, anterior: { ingresos: o.ingresos, gastos: o.gastos, ahorro: save(prev.inicio.slice(0, 7)) }, balanceNeto: c.ingresos - c.gastos - save(p.inicio.slice(0, 7)), fijos: sum(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia === 'Fijo'), (m) => -m.monto), variables: sum(curr.filter((m) => m.tipo === 'Gasto' && m.frecuencia !== 'Fijo'), (m) => -m.monto), mayorVariable: variable[0] ?? { nombre: 'Sin gastos variables', monto: 0, pct: 0 }, categorias: group(curr.filter((m) => m.tipo === 'Gasto') ) }; },
+  getAlertas: () => all<Alerta>('/alertas', 'alertas'),
+  marcarAlerta: (id: number) => request(`/alertas/${id}/leer`, { method: 'PATCH' }),
 };
