@@ -163,6 +163,8 @@ export async function crearMovimiento(
     monto: number;
     fecha_movimiento: string;
     descripcion?: string;
+    frecuencia?: "Fijo" | "Variable";
+    es_impulsivo?: boolean;
   },
 ) {
   await validarCategoria(data.id_categoria, usuarioId);
@@ -180,6 +182,8 @@ export async function crearMovimiento(
         `${data.fecha_movimiento}T00:00:00.000Z`,
       ),
       descripcion: data.descripcion,
+      frecuencia: data.frecuencia,
+      es_impulsivo: data.es_impulsivo ?? false,
       fecha_registro: new Date(),
     },
     include: movimientoInclude,
@@ -204,6 +208,8 @@ export async function actualizarMovimiento(
     monto?: number;
     fecha_movimiento?: string;
     descripcion?: string;
+    frecuencia?: "Fijo" | "Variable";
+    es_impulsivo?: boolean;
   },
 ) {
   const existente = await prisma.movimiento.findFirst({

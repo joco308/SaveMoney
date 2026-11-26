@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { ApiError } from "../types/api-error";
+import { escribir, validarCategoria, validarEmprendimiento } from "./operacion.service";
 
 const presupuestoInclude = {
   emprendimiento: true,
@@ -29,65 +30,9 @@ function serializar<T>(data: T): T {
   ) as T;
 }
 
-async function validarEmprendimiento(
-  idEmprendimiento: bigint | null | undefined,
-  usuarioId: bigint,
-) {
-  if (idEmprendimiento == null) return;
-
-  const emprendimiento = await prisma.emprendimiento.findFirst({
-    where: {
-      id_emprendimiento: idEmprendimiento,
-      id_usuario: usuarioId,
-      activo: true,
-    },
-  });
-
-  if (!emprendimiento) {
-    throw ApiError.badRequest(
-      "El emprendimiento no existe, está inactivo o no te pertenece",
-    );
-  }
-}
-
-async function obtenerPresupuestoPropio(
-  id: bigint,
-  usuarioId: bigint,
-) {
-  const presupuesto = await prisma.presupuesto.findFirst({
-    where: {
-      id_presupuesto: id,
-      id_usuario: usuarioId,
-    },
-  });
-
-  if (!presupuesto) {
-    throw ApiError.notFound("Presupuesto no encontrado");
-  }
-
-  return presupuesto;
-}
-
-async function validarCategoria(
-  idCategoria: number,
-  usuarioId: bigint,
-) {
-  const categoria = await prisma.categoria.findFirst({
-    where: {
-      id_categoria: idCategoria,
-      activa: true,
-      OR: [
-        { id_usuario: null },
-        { id_usuario: usuarioId },
-      ],
-    },
-  });
-
-  if (!categoria) {
-    throw ApiError.badRequest(
-      "La categoría no existe, está inactiva o no te pertenece",
-    );
-  }
+async function verificarPresupuesto(id: bigint, id_usuario: bigint) {
+  const presupuesto = await prisma.presupuesto.findFirst({ where: { id_presupuesto: id, id_usuario } });
+  if (!presupuesto) throw ApiError.notFound("Presupuesto no encontrado");
 }
 
 export async function listarPresupuestos(
@@ -164,19 +109,20 @@ export async function crearPresupuesto(
     umbral_alerta_pct: number;
   },
 ) {
-  await validarEmprendimiento(data.id_emprendimiento, usuarioId);
-
-  const presupuesto = await prisma.presupuesto.create({
-    data: {
-      id_usuario: usuarioId,
-      id_emprendimiento: data.id_emprendimiento ?? null,
-      anio: data.anio,
-      mes: data.mes,
-      monto_total: data.monto_total,
-      umbral_alerta_pct: data.umbral_alerta_pct,
-      fecha_creacion: new Date(),
-    },
-    include: presupuestoInclude,
+  const presupuesto = await escribir(async (tx) => {
+    await validarEmprendimiento(tx, data.id_emprendimiento, usuarioId);
+    return tx.presupuesto.create({
+      data: {
+        id_usuario: usuarioId,
+        id_emprendimiento: data.id_emprendimiento ?? null,
+        anio: data.anio,
+        mes: data.mes,
+        monto_total: data.monto_total,
+        umbral_alerta_pct: data.umbral_alerta_pct,
+        fecha_creacion: new Date(),
+      },
+      include: presupuestoInclude,
+    });
   });
 
   return serializar(presupuesto);
@@ -193,18 +139,23 @@ export async function actualizarPresupuesto(
     umbral_alerta_pct?: number;
   },
 ) {
-  await obtenerPresupuestoPropio(id, usuarioId);
+  const presupuesto = await escribir(async (tx) => {
+    const where = { id_presupuesto: id, id_usuario: usuarioId };
+    const actual = await tx.presupuesto.findFirst({ where });
+    if (!actual) throw ApiError.notFound("Presupuesto no encontrado");
 
-  if (data.id_emprendimiento !== undefined) {
-    await validarEmprendimiento(data.id_emprendimiento, usuarioId);
-  }
+    if (data.id_emprendimiento !== undefined) {
+      await validarEmprendimiento(tx, data.id_emprendimiento, usuarioId);
+    }
 
-  const presupuesto = await prisma.presupuesto.update({
-    where: { id_presupuesto: id },
-    data: {
-      ...data,
-    },
-    include: presupuestoInclude,
+    if (data.monto_total !== undefined) {
+      const limite = await tx.presupuesto_categoria.findFirst({
+        where: { id_presupuesto: id, presupuesto: { id_usuario: usuarioId }, monto_limite: { gt: data.monto_total } },
+      });
+      if (limite) throw ApiError.badRequest("El presupuesto no puede ser inferior a sus límites");
+    }
+
+    return tx.presupuesto.update({ where, data, include: presupuestoInclude });
   });
 
   return serializar(presupuesto);
@@ -214,158 +165,106 @@ export async function eliminarPresupuesto(
   id: bigint,
   usuarioId: bigint,
 ) {
-  const presupuesto = await prisma.presupuesto.findFirst({
-    where: {
-      id_presupuesto: id,
-      id_usuario: usuarioId,
-    },
-    include: {
-      alerta: true,
-      presupuesto_categoria: {
-        include: {
-          alerta: true,
-        },
-      },
-    },
-  });
-
-  if (!presupuesto) {
-    throw ApiError.notFound("Presupuesto no encontrado");
-  }
-
-  const tieneAlertas =
-    presupuesto.alerta.length > 0 ||
-    presupuesto.presupuesto_categoria.some(
-      (limite) => limite.alerta.length > 0,
-    );
-
-  if (tieneAlertas) {
-    throw new ApiError(
-      409,
-      "CONFLICT",
-      "No se puede eliminar el presupuesto porque tiene alertas relacionadas",
-    );
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.presupuesto_categoria.deleteMany({
-      where: { id_presupuesto: id },
-    });
-
-    await tx.presupuesto.delete({
-      where: { id_presupuesto: id },
-    });
+  await escribir(async (tx) => {
+    await tx.presupuesto.delete({ where: { id_presupuesto: id, id_usuario: usuarioId } });
   });
 
   return { mensaje: "Presupuesto eliminado correctamente" };
 }
 
+export async function listarLimites(idPresupuesto: bigint, id_usuario: bigint, page: number, limit: number) {
+  await verificarPresupuesto(idPresupuesto, id_usuario);
+  const where = { id_presupuesto: idPresupuesto, presupuesto: { id_usuario } };
+  const [registros, total] = await prisma.$transaction([
+    prisma.presupuesto_categoria.findMany({
+      where,
+      orderBy: { id_limite: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { categoria: true },
+    }),
+    prisma.presupuesto_categoria.count({ where }),
+  ], { isolationLevel: "RepeatableRead" });
+  return { registros, paginacion: { pagina: page, limite: limit, total, totalPaginas: Math.ceil(total / limit) } };
+}
+
+export async function obtenerLimite(idPresupuesto: bigint, idLimite: bigint, id_usuario: bigint) {
+  const limite = await prisma.presupuesto_categoria.findFirst({
+    where: { id_presupuesto: idPresupuesto, id_limite: idLimite, presupuesto: { id_usuario } },
+    include: { categoria: true },
+  });
+  if (!limite) throw ApiError.notFound("Límite de categoría no encontrado");
+  return limite;
+}
+
 export async function agregarLimiteCategoria(
   idPresupuesto: bigint,
-  usuarioId: bigint,
-  data: {
-    id_categoria: number;
-    monto_limite: number;
-    umbral_alerta_pct: number;
-  },
+  id_usuario: bigint,
+  data: { id_categoria: number; monto_limite: number; umbral_alerta_pct: number },
 ) {
-  await obtenerPresupuestoPropio(idPresupuesto, usuarioId);
-  await validarCategoria(data.id_categoria, usuarioId);
-
-  const existente = await prisma.presupuesto_categoria.findFirst({
-    where: {
-      id_presupuesto: idPresupuesto,
-      id_categoria: data.id_categoria,
-    },
-  });
-
-  if (existente) {
-    throw new ApiError(
-      409,
-      "CONFLICT",
-      "Esta categoría ya tiene un límite en el presupuesto",
-    );
-  }
-
-  const limite = await prisma.presupuesto_categoria.create({
-    data: {
-      id_presupuesto: idPresupuesto,
-      id_categoria: data.id_categoria,
-      monto_limite: data.monto_limite,
-      umbral_alerta_pct: data.umbral_alerta_pct,
-    },
-    include: {
-      categoria: true,
-    },
-  });
-
-  return serializar(limite);
+  return editarLimite(idPresupuesto, id_usuario, data);
 }
 
 export async function actualizarLimiteCategoria(
   idPresupuesto: bigint,
   idLimite: bigint,
-  usuarioId: bigint,
-  data: {
-    monto_limite?: number;
-    umbral_alerta_pct?: number;
-  },
+  id_usuario: bigint,
+  data: { id_categoria?: number; monto_limite?: number; umbral_alerta_pct?: number },
 ) {
-  await obtenerPresupuestoPropio(idPresupuesto, usuarioId);
-
-  const limite = await prisma.presupuesto_categoria.findFirst({
-    where: {
-      id_limite: idLimite,
-      id_presupuesto: idPresupuesto,
-    },
-  });
-
-  if (!limite) {
-    throw ApiError.notFound("Límite de categoría no encontrado");
-  }
-
-  const actualizado = await prisma.presupuesto_categoria.update({
-    where: { id_limite: idLimite },
-    data,
-    include: {
-      categoria: true,
-    },
-  });
-
-  return serializar(actualizado);
+  return editarLimite(idPresupuesto, id_usuario, data, idLimite);
 }
 
-export async function eliminarLimiteCategoria(
+async function editarLimite(
   idPresupuesto: bigint,
-  idLimite: bigint,
-  usuarioId: bigint,
+  id_usuario: bigint,
+  data: { id_categoria?: number; monto_limite?: number; umbral_alerta_pct?: number },
+  idLimite?: bigint,
 ) {
-  await obtenerPresupuestoPropio(idPresupuesto, usuarioId);
+  return escribir(async (tx) => {
+    const presupuesto = await tx.presupuesto.findFirst({
+      where: { id_presupuesto: idPresupuesto, id_usuario },
+    });
+    if (!presupuesto) throw ApiError.notFound("Presupuesto no encontrado");
 
-  const limite = await prisma.presupuesto_categoria.findFirst({
-    where: {
-      id_limite: idLimite,
-      id_presupuesto: idPresupuesto,
-    },
-    include: {
-      alerta: true,
-    },
+    const where = { id_presupuesto: idPresupuesto, presupuesto: { id_usuario } };
+    if (idLimite !== undefined && !await tx.presupuesto_categoria.findFirst({ where: { ...where, id_limite: idLimite } })) {
+      throw ApiError.notFound("Límite de categoría no encontrado");
+    }
+
+    if (data.monto_limite !== undefined && presupuesto.monto_total.lessThan(data.monto_limite)) {
+      throw ApiError.badRequest("El límite supera el presupuesto total");
+    }
+
+    if (data.id_categoria !== undefined) {
+      await validarCategoria(tx, data.id_categoria, id_usuario);
+      const duplicado = await tx.presupuesto_categoria.findFirst({
+        where: { ...where, id_categoria: data.id_categoria, ...(idLimite === undefined ? {} : { id_limite: { not: idLimite } }) },
+      });
+      if (duplicado) throw ApiError.conflict("La categoría ya tiene un límite en este presupuesto");
+    }
+
+    const include = { categoria: true };
+    if (idLimite !== undefined) {
+      return tx.presupuesto_categoria.update({ where: { ...where, id_limite: idLimite }, data, include });
+    }
+
+    const { id_categoria, monto_limite, umbral_alerta_pct } = data;
+    if (id_categoria === undefined || monto_limite === undefined || umbral_alerta_pct === undefined) {
+      throw ApiError.badRequest("Faltan los datos del límite");
+    }
+
+    return tx.presupuesto_categoria.create({
+      data: { id_presupuesto: idPresupuesto, id_categoria, monto_limite, umbral_alerta_pct },
+      include,
+    });
   });
+}
 
-  if (!limite) {
-    throw ApiError.notFound("Límite de categoría no encontrado");
-  }
-
-  if (limite.alerta.length > 0) {
-    throw new ApiError(
-      409,
-      "CONFLICT",
-      "No se puede eliminar este límite porque tiene alertas relacionadas",
-    );
-  }
-
-  await prisma.presupuesto_categoria.delete({
-    where: { id_limite: idLimite },
+export async function eliminarLimiteCategoria(idPresupuesto: bigint, idLimite: bigint, id_usuario: bigint) {
+  await escribir(async (tx) => {
+    await tx.presupuesto_categoria.delete({
+      where: { id_limite: idLimite, id_presupuesto: idPresupuesto, presupuesto: { id_usuario } },
+    });
   });
 
   return { mensaje: "Límite de categoría eliminado correctamente" };

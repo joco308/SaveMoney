@@ -5,10 +5,8 @@ import { disconnectPrisma, prisma } from "./config/prisma";
 async function bootstrap(): Promise<void> {
   await prisma.$connect();
 
-  const server = app.listen(env.PORT, () => {
-    console.log(
-      `[server] SaveMoney API escuchando en http://localhost:${env.PORT} (${env.NODE_ENV})`,
-    );
+  const server = app.listen(env.PORT, "0.0.0.0", () => {
+    console.log(`[server] SaveMoney API escuchando en el puerto ${env.PORT} (${env.NODE_ENV})`);
   });
 
   const shutdown = (signal: string): void => {

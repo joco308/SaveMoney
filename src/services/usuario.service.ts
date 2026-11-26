@@ -26,7 +26,7 @@ export async function getUsuarioById(
 
 export type PublicUsuario = Omit<
   usuario,
-  "hash_contrasena" | "id_usuario"
+  "hash_contrasena" | "auth_user_id" | "id_usuario"
 > & {
   id_usuario: string;
 };
@@ -34,6 +34,7 @@ export type PublicUsuario = Omit<
 export function toPublicUsuario(value: usuario): PublicUsuario {
   const {
     hash_contrasena: _hashContrasena,
+    auth_user_id: _authUserId,
     id_usuario,
     ...publicUsuario
   } = value;

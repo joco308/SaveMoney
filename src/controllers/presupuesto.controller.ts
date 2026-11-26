@@ -9,6 +9,7 @@ import {
   crearPresupuestoCategoriaSchema,
   actualizarPresupuestoCategoriaSchema,
 } from "../schemas/presupuesto.schema";
+import { paginacionSchema } from "../schemas/recurso.schema";
 import * as presupuestoService from "../services/presupuesto.service";
 
 export const listarPresupuestosController = asyncHandler(
@@ -132,3 +133,16 @@ export const eliminarLimiteCategoriaController = asyncHandler(
     res.status(200).json({ success: true, data: resultado });
   },
 );
+
+export const listarLimitesController = asyncHandler(async (req, res) => {
+  const { id } = presupuestoIdSchema.parse(req.validated?.params);
+  const { page, limit } = paginacionSchema.parse(req.validated?.query);
+  const data = await presupuestoService.listarLimites(id, req.usuario!.id_usuario, page, limit);
+  res.json({ success: true, data });
+});
+
+export const obtenerLimiteController = asyncHandler(async (req, res) => {
+  const { id, idLimite } = presupuestoCategoriaParamsSchema.parse(req.validated?.params);
+  const data = await presupuestoService.obtenerLimite(id, idLimite, req.usuario!.id_usuario);
+  res.json({ success: true, data });
+});

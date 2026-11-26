@@ -1,3 +1,4 @@
+import { router as catalogoRouter } from "./catalogo.routes";
 import { Router } from "express";
 import { healthRouter } from "./health.routes";
 import { usuarioRouter } from "./usuario.routes";
@@ -20,7 +21,8 @@ apiRouter.use("/movimientos", movimientoRouter);
 apiRouter.use("/emprendimientos", emprendimientoRouter);
 apiRouter.use("/presupuestos", presupuestoRouter);
 
-apiRouter.use("/metas-ahorro", metaAhorroRouter);
+apiRouter.use(["/metas-ahorro", "/metas"], metaAhorroRouter);
+apiRouter.use("/catalogos", catalogoRouter);
 
 apiRouter.use("/compras-impulsivas", compraImpulsivaRouter);
 

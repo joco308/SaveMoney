@@ -42,6 +42,8 @@ export const crearMovimientoSchema = z.object({
     ),
   fecha_movimiento: fechaSchema,
   descripcion: z.string().trim().max(200).optional(),
+  frecuencia: z.enum(["Fijo", "Variable"]).optional(),
+  es_impulsivo: z.boolean().optional(),
 });
 
 export const actualizarMovimientoSchema = crearMovimientoSchema
